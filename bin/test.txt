@@ -1,0 +1,11 @@
+print 'Hello, World!'
+
+function print_place()
+	var place={
+     	       address: 'Minsk'
+        	  }
+
+	print '\naddress:', place.address
+end
+
+print_place()
