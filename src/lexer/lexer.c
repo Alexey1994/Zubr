@@ -3,14 +3,17 @@
 #include "../extends.h"
 #include "lexer_operations.h"
 
+static String *main_name;
+
 typedef struct
 {
     String *token;
-    char (*func)(Lexer *lexer_data);
+    char  (*func)(Lexer *lexer_data);
 }
 LexerTableData;
 
 static Tree *lexer_table;
+
 
 static LexerTableData* new_lexer_table_data(String *token, char (*func)(Lexer *lexer_data))
 {
@@ -22,18 +25,23 @@ static LexerTableData* new_lexer_table_data(String *token, char (*func)(Lexer *l
     return data;
 }
 
+
 static int lexer_data_cmp(LexerTableData *data1, LexerTableData *data2)
 {
     return str_comparision(data1->token, data2->token);
 }
+
 
 static int lexer_token_cmp(String *token, LexerTableData *data)
 {
     return str_comparision(token, data->token);
 }
 
-void lexer_table_init()
+
+void lexer_init()
 {
+    main_name=str_init("");
+
     lexer_table=tree_init();
 
     tree_add(lexer_table, new_lexer_table_data(str_init("print"   ), lexer_print   ), lexer_data_cmp);
@@ -53,11 +61,12 @@ void lexer_table_init()
     tree_add(lexer_table, new_lexer_table_data(str_init("N"       ), lexer_N       ), lexer_data_cmp);
 }
 
+
 char get_function_body(Lexer *lexer)
 {
     LexerTableData *lexer_data;
 
-    lexer->is_end_function=0;
+    lexer->is_end_function=0;//?
 
     while(!lexer->is_end_function)
     {
@@ -69,7 +78,6 @@ char get_function_body(Lexer *lexer)
             lexer->source=array_pop(lexer->scopes);
         }
 
-        str_clear(lexer->token);
         get_token(lexer, lexer->token);
 
         lexer_data=tree_find(lexer_table, lexer->token, lexer_token_cmp);
@@ -83,28 +91,15 @@ char get_function_body(Lexer *lexer)
             if(lexer->head=='#')
             {
                 do
-                    lexer->read_byte(lexer);
-                while(!lexer->end_of_data && lexer->head!='\n');
+                    read_byte(lexer);
+                while(lexer->head!='\n' && !lexer->end_of_data);
             }
             else if(!get_call_or_assignment(lexer))
             {
-
                 if(!lexer_load_class(lexer))
                 {
-                    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    if(lexer->end_of_data)
-                    {
-                        if(!lexer->sources->length)
-                            break;
-
-                        lexer->source=array_pop(lexer->scopes);
-                    }
-                    else
-                    {
-                        printf("\nнеопределённый символ '%c'", lexer->head);
-                        //lexer->read_byte(lexer);
-                        return 0;
-                    }
+                    printf("\nнеопределённый символ '%c'", lexer->head);
+                    return 0;
                 }
             }
         }
@@ -115,15 +110,16 @@ char get_function_body(Lexer *lexer)
     return 1;
 }
 
-Function* run_lexer(char *source, void (*read_byte(Lexer *lexer)))
+
+Function* run_lexer(char *source, char (*get_byte)(Lexer *lexer), char (*end_of_data)(Lexer *lexer))
 {
-    String   *main_name=str_init("");
     Lexer    *lexer_alloc=new(Lexer);
     Function *main=new_function(main_name, 0);
 
     lexer_alloc->end_of_data=0;
     lexer_alloc->source=source;
-    lexer_alloc->read_byte=read_byte;
+    lexer_alloc->get_byte=get_byte;
+    lexer_alloc->end_data=end_of_data;
 
     lexer_alloc->token=str_init("");
 
@@ -145,14 +141,14 @@ Function* run_lexer(char *source, void (*read_byte(Lexer *lexer)))
 
     lexer_alloc->sources=array_init();
 
-    lexer_alloc->read_byte(lexer_alloc);
+    read_byte(lexer_alloc);
 
     if(!get_function_body(lexer_alloc))
         return 0;
 
     if(lexer_alloc->blocks_pos->begin)
     {
-        printf("error: expected end\n");
+        printf("отсутствует end\n");
     }
 
     return main;

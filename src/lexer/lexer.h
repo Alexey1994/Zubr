@@ -5,7 +5,7 @@
 #include "../tree.h"
 #include "lexer_operations.h"
 
-Function* run_lexer(char *source, void (*read_byte(Lexer *lexer)));
-void lexer_table_init();
+Function* run_lexer(char *source, char (*get_byte)(Lexer *lexer), char (*end_of_data)(Lexer *lexer));
+void lexer_init();
 
 #endif // LEXER_H_INCLUDED

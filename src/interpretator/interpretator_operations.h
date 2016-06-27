@@ -11,15 +11,6 @@
 #define LOOP_CONTINUE 2
 //#define FUNCTION_RETURN 3
 
-typedef struct
-{
-    unsigned int  count;
-    char         *data;
-}
-GCVariable;
-
-Variable* interpretator_add_var(Interpretator *interpretator, Variable *var);
-
 extern Variable *undefined;
 
 void interpretator_table_init();

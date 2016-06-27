@@ -18,7 +18,8 @@
 #define CONST_REAL    0x08
 #define BOOLEAN       0x09
 #define FUNCTION      0x0a
-#define CLASS         0x0b
+#define MODULE        0x0b
+#define ARGUMENT      0x0c
 
 #define END           0x01
 #define PRINT         0x02

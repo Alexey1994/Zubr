@@ -1,527 +1,8 @@
 #include "interpretator_operations.h"
 #include "../Array.h"
 #include "../Map.h"
-
-Variable* eval(Interpretator *interpretator, struct ListNode *i);
-static char eval_condition(Interpretator *interpretator, struct ListNode *i);
-static Variable* eval_left_operand(Array *operands, Interpretator *interpretator, char new_type, Variable *right_variable);
-
-static Variable* interpretator_heap_var_alloc(Interpretator *interpretator, Variable *variable)
-{
-    Variable *new_variable=new(Variable);
-
-    new_variable->is_closed=variable->is_closed;
-    new_variable->type=variable->type;
-    new_variable->name=variable->name;
-    new_variable->shift=variable->shift;
-
-    return new_variable;
-}
-
-Variable* interpretator_add_var(Interpretator *interpretator, Variable *var)
-{
-    Variable* new_var=interpretator_var_alloc(interpretator);
-
-    new_var->name=var->name;
-
-    switch(var->type)
-    {
-    case UNDEFINED:
-        ///////////////////////
-        //new_var->type=UNDEFINED;
-        //new_var->shift=var->shift;
-        //printf("\n:)");
-        break;
-
-    case REAL:
-        new_var->type=CONST_REAL;
-        new_var->shift=interpretator->stack_base[var->shift];
-        break;
-
-    case CONST_REAL:
-        new_var->type=CONST_REAL;
-        new_var->shift=var->shift;
-        break;
-
-    case INTEGER:
-        new_var->type=CONST_INTEGER;
-        new_var->shift=interpretator->stack_base[var->shift];
-        break;
-
-    case CONST_INTEGER:
-        new_var->type=CONST_INTEGER;
-        new_var->shift=var->shift;
-        break;
-
-    case GC_INTEGER:
-        new_var->type=CONST_INTEGER;
-        new_var->shift=*(int*)var->shift;
-        break;
-
-    case STRING:
-        new_var->type=STRING;
-        new_var->shift=var->shift;
-        break;
-
-    case MAP:
-        new_var->type=MAP;
-        new_var->shift=var->shift;
-        break;
-
-    case ARRAY:
-        new_var->type=ARRAY;
-        new_var->shift=var->shift;
-        break;
-
-    case CLASS:
-        break;
-
-    default:
-        printf("\nне определён тип в аллокаторе стека");
-        break;
-    }
-
-    return new_var;
-}
-
-GCVariable* alloc_gc_variable(Variable *variable, Interpretator *interpretator)
-{
-    GCVariable *gc_variable;
-
-    switch(variable->type)
-    {
-    case INTEGER:
-        gc_variable=new(GCVariable);
-        gc_variable->data=*((int*)interpretator->stack_base+variable->shift);
-        break;
-
-    case CONST_INTEGER:
-        gc_variable=new(GCVariable);
-        gc_variable->data=variable->shift;
-        break;
-
-    case GC_INTEGER:
-        ((GCVariable*)variable->shift)->count++;
-        return variable->shift;
-        break;
-
-    default:
-        printf("\nне определён тип в аллокаторе кучи");
-        break;
-    }
-
-    gc_variable->count=1;
-
-    return gc_variable;
-}
-
-void free_gc_variable(GCVariable *gc_variable)
-{
-    gc_variable->count--;
-
-    if(!gc_variable->count)
-    {
-        free(gc_variable->data);
-        free(gc_variable);
-    }
-}
-
-char interpretator_loop(List *loop_body, Interpretator *interpretator)
-{
-    while(execute(interpretator, loop_body)!=LOOP_BREAK);
-
-    return LOOP_NORMAL;
-}
-
-char interpretator_break()
-{
-    return LOOP_BREAK;
-}
-
-char interpretator_continue()
-{
-    return LOOP_CONTINUE;
-}
-
-static char* get_left_variable_data(Interpretator *interpretator, Variable *variable, Variable *variable2)
-{
-    switch(variable->type)
-    {
-    case CONST_REAL:
-        return &variable->shift;
-        break;
-
-    case CONST_INTEGER:
-        return &variable->shift;
-
-    default:
-        printf("\nТЕСТ не определен тип при вычислении левой переменной номер типа %d", variable->type);
-        break;
-    }
-}
-
-static void add(Interpretator *interpretator)
-{
-    Variable *op2=interpretator_pop_var(interpretator),
-             *op1=interpretator->stack_head-1;
-
-    switch(op1->type)
-    {
-    case CONST_INTEGER:
-        switch(op2->type)
-        {
-        case CONST_INTEGER:
-            op1->shift+=op2->shift;
-            break;
-
-        case CONST_REAL:
-            op1->type=CONST_REAL;
-            *(float*)&op1->shift=(float)op1->shift;
-
-            *(float*)&op1->shift+=*(float*)&op2->shift;
-            break;
-        }
-        break;
-
-    case CONST_REAL:
-        switch(op2->type)
-        {
-        case CONST_INTEGER:
-            op2->type=CONST_REAL;
-            *(float*)&op2->shift=(float)op2->shift;
-
-            *(float*)&op1->shift+=*(float*)&op2->shift;
-            break;
-
-        case CONST_REAL:
-            *(float*)&op1->shift+=*(float*)&op2->shift;
-            break;
-        }
-        break;
-    }
-}
-
-static void sub(Interpretator *interpretator)
-{
-    Variable *op2=interpretator_pop_var(interpretator),
-             *op1=interpretator->stack_head-1;
-    char     *left_variable_data=get_left_variable_data(interpretator, interpretator->stack_head-1, op2);
-
-    switch(op2->type)
-    {
-    case CONST_INTEGER:
-        *(int*)left_variable_data-=op2->shift;
-        break;
-
-    default:
-        printf("\nТЕСТ не определен тип при вычислении правой переменной в вычитании");
-        break;
-    }
-}
-
-static void mul(Interpretator *interpretator)
-{
-    Variable *op2=interpretator_pop_var(interpretator),
-             *op1=interpretator->stack_head-1;
-    char     *left_variable_data=get_left_variable_data(interpretator, interpretator->stack_head-1, op2);
-
-    switch(op2->type)
-    {
-    case CONST_INTEGER:
-        *(int*)left_variable_data*=op2->shift;
-        break;
-
-    default:
-        printf("\nТЕСТ не определен тип при вычислении правой переменной в умножении");
-        break;
-    }
-}
-
-static void division(Interpretator *interpretator)
-{
-    Variable *op2=interpretator_pop_var(interpretator),
-             *op1=interpretator->stack_head-1;
-    char     *left_variable_data=get_left_variable_data(interpretator, interpretator->stack_head-1, op2);
-
-    switch(op2->type)
-    {
-    case CONST_INTEGER:
-        *(int*)left_variable_data/=op2->shift;
-        break;
-
-    default:
-        printf("\nТЕСТ не определен тип при вычислении правой переменной в делении");
-        break;
-    }
-}
-
-static void lesser(Interpretator *interpretator)
-{
-    Variable *op2=interpretator_pop_var(interpretator);
-    char     *left_variable_data=get_left_variable_data(interpretator, interpretator->stack_head-1, op2);
-
-    switch(op2->type)
-    {
-    case CONST_INTEGER:
-        *(int*)left_variable_data=*(int*)left_variable_data<op2->shift;
-        break;
-
-    default:
-        printf("\nТЕСТ не определен тип при вычислении правой переменной в меньше");
-        break;
-    }
-}
-
-static void and(Interpretator *interpretator)
-{
-    Variable *op2=interpretator_pop_var(interpretator);
-    char     *left_variable_data=get_left_variable_data(interpretator, interpretator->stack_head-1, op2);
-
-    switch(op2->type)
-    {
-    case CONST_INTEGER:
-        *(int*)left_variable_data=*(int*)left_variable_data<op2->shift;
-        break;
-
-    default:
-        printf("\nТЕСТ не определен тип при вычислении правой переменной в меньше");
-        break;
-    }
-}
-
-static char* (*op[256])(Interpretator *interpretator);
-
-void interpretator_operation_table_init()
-{
-    op['+']=add;
-    op['-']=sub;
-    op['*']=mul;
-    op['/']=division;
-
-    op['<']=lesser;
-    op['a']=and;
-}
-
-
-static Variable* eval_operand(Array *arr, Interpretator *interpretator)
-{
-    Data     *data;
-
-    Variable *prev_var,
-             *cur_var;
-    int       i;
-    List     *index;
-
-    Array    *array;
-    Map      *map;
-    List     *expression;
-
-    Function *f;
-
-    for(i=0; i<arr->length; i++)
-    {
-        data=arr->data[i];
-        switch(data->type)
-        {
-        case 'v':
-            cur_var=data->data;
-            break;
-
-        case '[':
-            index=data->data;
-
-            if(cur_var->type!=ARRAY)
-            {
-                printf("\nvariable '");
-                str_print(cur_var->name);
-                printf("' is not array");
-
-                return undefined;
-            }
-
-            array=cur_var->shift;
-
-            cur_var=eval(interpretator, index->begin);
-
-            switch(cur_var->type)
-            {
-            case CONST_INTEGER:
-                if(cur_var->shift>=array->length)
-                {
-                    printf("\nout of range in array");
-                    return cur_var;
-                }
-
-                cur_var=array->data[cur_var->shift];
-                break;
-            }
-            break;
-
-        case '(':
-            if(cur_var->type!=FUNCTION)
-            {
-                printf("\nvariable ");
-                str_print(cur_var->name);
-                printf(" is not function");
-
-                return 0;
-            }
-
-            cur_var=run_function(interpretator, cur_var->shift, 0);
-            break;
-
-        case '.':
-            if(cur_var->type!=MAP)
-            {
-                if(cur_var->type!=CLASS)
-                {
-                    printf("\nеременная ");
-                    str_print(cur_var->name);
-                    printf(" не является ни множеством ни классом");
-
-                    return 0;
-                }
-
-                //f=cur_var->shift;
-                //cur_var=find_local_var(f->variables, );
-
-                break;
-            }
-
-            map=cur_var->shift;
-
-            cur_var=map_get(map, data->data);
-            if(!cur_var)
-            {
-                printf("\nkey ");
-                str_print(data->data);
-                printf(" not found");
-
-                return undefined;
-            }
-            break;
-        }
-    }
-
-    return cur_var;
-}
-
-Variable* eval(Interpretator *interpretator, struct ListNode *i)
-{
-    Variable *rez,
-             *var,
-             *op1,
-             *op2;
-    Data     *data;
-    int      *op1_data,
-             *op2_data;
-
-    for(; i; i=i->next)
-    {
-        data=i->data;
-
-        switch(data->type)
-        {
-            case OPERAND:
-                interpretator_add_var(interpretator, data->data);
-                break;
-
-            case COMPOUND_OPERAND:
-                var=eval_operand(data->data, interpretator);
-
-                if(!var)
-                    return undefined;
-
-                interpretator_add_var(interpretator, var);
-                break;
-
-            case OPERATION:
-                op[(char)data->data](interpretator);
-                break;
-        }
-    }
-
-    //return interpretator_pop_var(interpretator);
-    return interpretator->stack_head-1;
-}
-
-static char eval_condition(Interpretator *interpretator, struct ListNode *i)
-{
-    Variable *rez,
-             *var,
-             *op1,
-             *op2;
-    Data     *data;
-    int      *op1_data,
-             *op2_data;
-    List     *cond1,
-             *cond2;
-    char      bool_rez;
-
-    for(; i; i=i->next)
-    {
-        data=i->data;
-
-        switch(data->type)
-        {
-            case OPERAND:
-                printf(" op");
-                interpretator->stack_head=data->data;
-                interpretator->stack_head++;
-                break;
-
-            case OPERATION:
-                switch(data->data)
-                {
-                case 'a':
-                    printf(" a");
-
-                    cond2=interpretator->stack_head-1;
-                    interpretator->stack_head--;
-
-                    //cond1=interpretator->stack_head-1;
-                    //interpretator->stack_head--;
-
-                    eval(interpretator, cond2->begin);
-                    rez=interpretator_pop_var(interpretator);
-
-                    if(!rez->shift)
-                        return 0;
-
-                    break;
-
-                case 'o':
-                    break;
-
-                case 'n':
-                    break;
-                }
-
-                break;
-        }
-    }
-
-   //bool_rez=0;//interpretator->stack_head[-1].shift;
-    //interpretator_pop_var(interpretator);
-    //return bool_rez;
-
-    cond1=interpretator->stack_head-1;
-    interpretator->stack_head--;
-
-    eval(interpretator, cond1->begin);
-    rez=interpretator_pop_var(interpretator);
-
-    return rez->shift;
-}
-
-char interpretator_call(Array *call_data, Interpretator *interpretator)
-{
-    char     *result;
-
-    result=eval_left_operand(call_data, interpretator, FUNCTION, 0);
-
-    return LOOP_NORMAL;
-}
+#include "EvalCondition.h"
+#include "memory.h"
 
 
 static Variable* eval_left_operand(Array *operands, Interpretator *interpretator, char new_type, Variable *right_variable)
@@ -542,7 +23,6 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
     int       j;
     Function *function;
 
-
     for(i=0; i<operands->length; i++)
     {
         data=operands->data[i];
@@ -551,6 +31,9 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
         {
         case 'v':
             cur_var=data->data;
+
+            if(cur_var->type==ARGUMENT)
+                cur_var=interpretator->stack_base[cur_var->shift];
             break;
 
         case '[':
@@ -567,7 +50,8 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
 
             array=cur_var->shift;
 
-            cur_var=eval(interpretator, index_expression->begin);
+            eval(interpretator, index_expression->begin);
+            cur_var=interpretator_pop_var(interpretator);
 
             switch(cur_var->type)
             {
@@ -632,7 +116,8 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
 
     switch(new_type)
     {
-        case INTEGER: case CONST_INTEGER:
+        case INTEGER:
+        case CONST_INTEGER:
             cur_var->type=INTEGER;
             break;
 
@@ -655,6 +140,9 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
             cur_var->type=MAP;
             return &cur_var->shift;
             break;
+
+        default:
+            printf("\nне определён тип при вычислении правой переменной в присваивании");
     }
 
     if(cur_var->is_closed)
@@ -662,13 +150,29 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
 
     }
     else
-        return (int*)interpretator->stack_base+cur_var->shift;
+    {
+        /*
+        switch(cur_var->type)
+        {
+        case INTEGER:
+            return (int*)inte
+            break;
+        }*/
+
+        return interpretator->stack_base+cur_var->shift;
+    }
 }
+
 
 char interpretator_assignment(Assignment *assignment_data, Interpretator *interpretator)
 {
-    Variable   *result=eval(interpretator, assignment_data->right_expression->begin);
-    char       *left_variable=eval_left_operand(assignment_data->left_operand, interpretator, result->type, result);
+    Variable   *result;
+    char       *left_variable;
+
+    eval(interpretator, assignment_data->right_expression->begin);
+    result=interpretator_pop_var(interpretator);
+
+    left_variable=eval_left_operand(assignment_data->left_operand, interpretator, result->type, result);
 
     switch(result->type)
     {
@@ -677,6 +181,7 @@ char interpretator_assignment(Assignment *assignment_data, Interpretator *interp
         break;
 
     case CONST_INTEGER:
+
         *(int*)left_variable=result->shift;
         break;
 
@@ -708,11 +213,43 @@ char interpretator_assignment(Assignment *assignment_data, Interpretator *interp
     return LOOP_NORMAL;
 }
 
+
+char interpretator_loop(List *loop_body, Interpretator *interpretator)
+{
+    while(execute(interpretator, loop_body)!=LOOP_BREAK);
+
+    return LOOP_NORMAL;
+}
+
+
+char interpretator_break()
+{
+    return LOOP_BREAK;
+}
+
+
+char interpretator_continue()
+{
+    return LOOP_CONTINUE;
+}
+
+
+char interpretator_call(Array *call_data, Interpretator *interpretator)
+{
+    char     *result;
+
+    result=eval_left_operand(call_data, interpretator, FUNCTION, 0);
+
+    return LOOP_NORMAL;
+}
+
+
 static void print_map_node(MapNode *map_node)
 {
     printf("\n");
     str_print(map_node->key);
 }
+
 
 static void print_variable(Interpretator *interpretator, Variable *result)
 {
@@ -721,6 +258,7 @@ static void print_variable(Interpretator *interpretator, Variable *result)
     Array      *array;
     List       *expression;
     Map        *map;
+    //printf("\n^>%d", result);
 
     if(!result)
     {
@@ -787,12 +325,19 @@ static void print_variable(Interpretator *interpretator, Variable *result)
     }
 }
 
+
 char interpretator_print(Print *print, Interpretator *interpretator)
 {
-    print_variable(interpretator, eval(interpretator, print->expression->begin));
+    Variable *print_var;
+
+    print_var=eval(interpretator, print->expression->begin);
+    interpretator_pop_var(interpretator);
+
+    print_variable(interpretator, print_var);
 
     return LOOP_NORMAL;
 }
+
 
 char interpretator_return(List *return_expression, Interpretator *interpretator)
 {
@@ -807,8 +352,10 @@ char interpretator_return(List *return_expression, Interpretator *interpretator)
     return RETURN;
 }
 
+
 char interpretator_push(Push *push_data, Interpretator *interpretator)
 {
+    /*
     Variable *array_variable=eval_operand(push_data->array, interpretator),
              *array_element;
     Array    *array;
@@ -823,9 +370,11 @@ char interpretator_push(Push *push_data, Interpretator *interpretator)
     array_element=interpretator_heap_var_alloc(interpretator, eval(interpretator, push_data->expression->begin));
 
     array_push(array, array_element);
+    */
 
     return LOOP_NORMAL;
 }
+
 
 char interpretator_if(If *if_data, Interpretator *interpretator)
 {
@@ -839,13 +388,15 @@ char interpretator_if(If *if_data, Interpretator *interpretator)
     return LOOP_NORMAL;
 }
 
+
 char interpretator_while(While *while_data, Interpretator *interpretator)
 {
     printf("\n<while>");
-    while(eval_condition(interpretator, while_data->cond->begin) && execute(interpretator, while_data->body)!=LOOP_BREAK);
+    while(eval_condition(interpretator, while_data->cond->begin) && execute(interpretator, while_data->body)!=LOOP_BREAK) ;
 
     return LOOP_NORMAL;
 }
+
 
 char interpretator_do(Do *do_data, Interpretator *intepretator)
 {

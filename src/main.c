@@ -5,30 +5,6 @@
 
 #include <locale.h>
 
-void read_byte(Lexer *lexer)
-{
-    if(lexer->buffered_symbol_pos<lexer->buffered_length)
-    {
-        lexer->head=lexer->buffer[lexer->buffered_symbol_pos];
-        lexer->buffered_symbol_pos++;
-
-        if(lexer->buffered_symbol_pos==lexer->buffered_length)
-        {
-            lexer->buffered_length=0;
-            lexer->buffered_symbol_pos=0;
-        }
-    }
-    else
-    {
-        lexer->head=fgetc(lexer->source);
-
-        if(feof((FILE*)lexer->source))
-            lexer->end_of_data=1;
-    }
-
-    //if(!lexer->end_of_data)
-        //printf("%c", lexer->head);
-}
 
 int main()
 {
@@ -49,11 +25,11 @@ int main()
     FILE *f=fopen("test.txt", "rb");
     char *main;
 
-    lexer_table_init();
+    lexer_init();
     interpretator_table_init();
     interpretator_operation_table_init();
 
-    main=run_lexer(f, read_byte);
+    main=run_lexer(f, fgetc, feof);
 
     if(main)
     {

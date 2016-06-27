@@ -1,6 +1,7 @@
 #include "Id.h"
 #include <stdlib.h>
 
+
 Id* id_init(char min, char max)
 {
     Id *id=malloc(sizeof(Id));
@@ -13,6 +14,7 @@ Id* id_init(char min, char max)
 
     return id;
 }
+
 
 char *generate_id(Id *id)
 {

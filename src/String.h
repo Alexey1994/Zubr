@@ -18,7 +18,7 @@ int str_comparision(String *s1, String *s2);
 void str_concat(String *s1, String *s2);
 void str_push(String *s, char data);
 char str_pop(String *s);
-void str_copy(String *str1, String *str2);
+String* str_copy(String *str);
 void str_clear(String *s);
 String *str_init(const char *c);
 void str_free(String *s);

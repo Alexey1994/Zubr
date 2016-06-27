@@ -1,11 +1,13 @@
 #include "GetData.h"
 
+
 char is_number(char c)
 {
     if(c>='0' && c<='9')
         return 1;
     return 0;
 }
+
 
 char is_hex_number(char c)
 {
@@ -14,12 +16,14 @@ char is_hex_number(char c)
     return 0;
 }
 
+
 char is_letter(char c)
 {
     if((c>='a' && c<='z') || (c>='A' && c<='Z') || c=='_')
         return 1;
     return 0;
 }
+
 
 char is_space(char c)
 {
@@ -28,22 +32,25 @@ char is_space(char c)
     return 0;
 }
 
+
 void skip(Lexer *lexer)
 {
     while(!lexer->end_of_data && is_space(lexer->head))
-        lexer->read_byte(lexer);
+        read_byte(lexer);
 }
+
 
 String* get_word(Lexer *lexer, String *token)
 {
     while(is_letter(lexer->head) && !lexer->end_of_data)
     {
         str_push(token, lexer->head);
-        lexer->read_byte(lexer);
+        read_byte(lexer);
     }
 
     return token;
 }
+
 
 String* get_token_data(Lexer *lexer)
 {
@@ -59,12 +66,14 @@ String* get_token_data(Lexer *lexer)
     return token;
 }
 
+
 void get_token(Lexer *lexer, String *token)
 {
     str_clear(token);
     skip(lexer);
     get_word(lexer, token);
 }
+
 
 char is_true_word(Lexer *lexer, char *word)
 {
@@ -81,7 +90,7 @@ char is_true_word(Lexer *lexer, char *word)
             return 0;
         }
 
-        lexer->read_byte(lexer);
+        read_byte(lexer);
 
         //if(!lexer->end_of_data)
         {
@@ -100,4 +109,30 @@ char is_true_word(Lexer *lexer, char *word)
     }
 
     return 1;
+}
+
+
+void read_byte(Lexer *lexer)
+{
+    if(lexer->buffered_symbol_pos<lexer->buffered_length)
+    {
+        lexer->head=lexer->buffer[lexer->buffered_symbol_pos];
+        lexer->buffered_symbol_pos++;
+
+        if(lexer->buffered_symbol_pos==lexer->buffered_length)
+        {
+            lexer->buffered_length=0;
+            lexer->buffered_symbol_pos=0;
+        }
+    }
+    else
+    {
+        lexer->head=lexer->get_byte(lexer->source);
+
+        if(lexer->end_data(lexer->source))
+            lexer->end_of_data=1;
+    }
+
+    //if(!lexer->end_of_data)
+        //printf("%c", lexer->head);
 }

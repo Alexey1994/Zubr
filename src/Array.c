@@ -1,6 +1,7 @@
 #include "Array.h"
 #include <stdlib.h>
 
+
 Array* array_init()
 {
     Array *array=malloc(sizeof(Array));
@@ -11,6 +12,7 @@ Array* array_init()
 
     return array;
 }
+
 
 void array_push(Array *array, char *data)
 {
@@ -26,15 +28,18 @@ void array_push(Array *array, char *data)
     array->length++;
 }
 
+
 char* array_pop(Array *array)
 {
 
 }
 
+
 char* array_get(Array *array, int index)
 {
     return array->data[index];
 }
+
 
 void array_free(Array *array)
 {

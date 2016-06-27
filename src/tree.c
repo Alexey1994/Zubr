@@ -6,6 +6,7 @@
 const char ERROR=1,
            OK=0;
 
+
 Tree* tree_init()
 {
     Tree *tree=malloc(sizeof(Tree));
@@ -16,6 +17,7 @@ Tree* tree_init()
     return tree;
 }
 
+
 static unsigned char height(TreeNode *p)
 {
     if(p)
@@ -23,10 +25,12 @@ static unsigned char height(TreeNode *p)
     return 0;
 }
 
+
 static int bfactor(TreeNode *p)
 {
     return height(p->right)-height(p->left);
 }
+
 
 static void fixheight(TreeNode *p)
 {
@@ -39,6 +43,7 @@ static void fixheight(TreeNode *p)
         p->height=hr+1;
 }
 
+
 static TreeNode* rotateright(TreeNode *p)
 {
     TreeNode *q=p->left;
@@ -50,6 +55,7 @@ static TreeNode* rotateright(TreeNode *p)
     return q;
 }
 
+
 static TreeNode* rotateleft(TreeNode *q)
 {
     TreeNode *p=q->right;
@@ -60,6 +66,7 @@ static TreeNode* rotateleft(TreeNode *q)
 
     return p;
 }
+
 
 static TreeNode* balance(TreeNode *p)
 {
@@ -80,6 +87,7 @@ static TreeNode* balance(TreeNode *p)
 
     return p;
 }
+
 
 static char *tree_add_data;
 static char (*tree_comparision)(char *, char *);
@@ -109,6 +117,7 @@ static TreeNode *tree_add_node(TreeNode *node)
     return balance(node);
 }
 
+
 void tree_add(Tree *tree, char *data, char(*comparision)(char *, char *))
 {
     tree_add_data=data;
@@ -116,6 +125,7 @@ void tree_add(Tree *tree, char *data, char(*comparision)(char *, char *))
     tree->root=tree_add_node(tree->root);
     tree->length++;
 }
+
 
 char* tree_find(Tree *tree, char *data, int(*comparision)(char *s1, char *s2))
 {
@@ -136,6 +146,7 @@ char* tree_find(Tree *tree, char *data, int(*comparision)(char *s1, char *s2))
 
     return 0;
 }
+
 
 static void (*tree_print_func)(char *data);
 static int l=0;
@@ -160,11 +171,13 @@ static void tree_print_node(TreeNode *node)
     }
 }
 
+
 void tree_print(Tree *tree, void (*print_data)(char *data))
 {
     tree_print_func=print_data;
     tree_print_node(tree->root);
 }
+
 
 static void (*tree_free_func)(char *data);
 
@@ -178,6 +191,7 @@ static void tree_free_node(TreeNode *node)
         free(node);
     }
 }
+
 
 void tree_free(Tree *tree, void(*free_data)(char *data))
 {

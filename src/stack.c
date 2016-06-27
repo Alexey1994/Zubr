@@ -1,6 +1,7 @@
 #include "stack.h"
 #include <stdlib.h>
 
+
 Stack *stack_init()
 {
     Stack *s=malloc(sizeof(Stack));
@@ -10,6 +11,7 @@ Stack *stack_init()
     return s;
 }
 
+
 void push(Stack *s, char *data)
 {
     NodeStack *alloc=malloc(sizeof(NodeStack));
@@ -17,6 +19,7 @@ void push(Stack *s, char *data)
     alloc->previouse=s->begin;
     s->begin=alloc;
 }
+
 
 char *pop(Stack *s)
 {
@@ -27,6 +30,7 @@ char *pop(Stack *s)
 
     return ret;
 }
+
 
 void stack_clean(Stack *s)
 {
@@ -40,6 +44,7 @@ void stack_clean(Stack *s)
         del=i;
     }
 }
+
 
 void stack_free(Stack *s)
 {

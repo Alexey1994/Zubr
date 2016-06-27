@@ -1,6 +1,7 @@
 #include "String.h"
 #include <stdlib.h>
 
+
 static void *str_realloc(String *s)
 {
     char *buf_tmp=malloc(s->reserve_count_begin + s->reserve_count_end), *del;
@@ -22,6 +23,7 @@ static void *str_realloc(String *s)
     *s->end='\0';
     free(del);
 }
+
 
 String *str_init(const char *c)
 {
@@ -58,6 +60,7 @@ String *str_init(const char *c)
     return s;
 }
 
+
 void str_push(String *s, char data)
 {
     s->length++;
@@ -71,6 +74,7 @@ void str_push(String *s, char data)
     s->end++;
     *s->end='\0';
 }
+
 
 void str_push_back(String *s, char data)
 {
@@ -86,6 +90,7 @@ void str_push_back(String *s, char data)
     *s->begin=data;
 }
 
+
 char str_pop(String *s)
 {
     char ret;
@@ -98,6 +103,7 @@ char str_pop(String *s)
     return ret;
 }
 
+
 char str_pop_back(String *s)
 {
     char ret=*s->begin;
@@ -108,6 +114,7 @@ char str_pop_back(String *s)
 
     return ret;
 }
+
 
 void str_clear(String *s)
 {
@@ -125,20 +132,31 @@ void str_clear(String *s)
     *s->begin='\0';
 }
 
-void str_copy(String *str1, String *str2)
-{
 
+String* str_copy(String *str)
+{
+    String *new_str=str_init("");
+    int     i;
+
+    for(i=0; i<str->length; i++)
+        str_push(new_str, str->begin[i]);
+
+    return new_str;
 }
+
 
 void str_concat(String *s1, String *s2)
 {
+
 }
+
 
 void str_free(String *s)
 {
     free(s->begin - s->reserve_count_begin + s->length_begin);
     free(s);
 }
+
 
 void str_print(String *s)
 {
@@ -147,15 +165,18 @@ void str_print(String *s)
         printf("%c", s->begin[i]);
 }
 
+
 int str_to_int(String *s)
 {
     return atoi(s->begin);
 }
 
+
 float str_to_float(String *s)
 {
     return atof(s->begin);
 }
+
 
 int str_hex_to_int(String *s)
 {
@@ -177,6 +198,7 @@ int str_hex_to_int(String *s)
 
     return hex_num;
 }
+
 
 int str_comparision(String *s1, String *s2)
 {

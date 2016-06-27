@@ -2,6 +2,7 @@
 #include "../Map.h"
 #include "../GetData.h"
 
+
 int prior(char c)
 {
     switch(c)
@@ -30,6 +31,7 @@ int prior(char c)
     }
 }
 
+
 static Variable* get_anonim_function(Lexer *lexer)
 {
     String   *unique_function_name=str_init(generate_id(lexer->id));
@@ -44,6 +46,7 @@ static Variable* get_anonim_function(Lexer *lexer)
     return new_static_variable(lexer, str_init(generate_id(lexer->id)), FUNCTION, function);
 }
 
+
 static Variable* get_map(Lexer *lexer)
 {
     String     *key;
@@ -53,7 +56,7 @@ static Variable* get_map(Lexer *lexer)
 
     map_variable=new_static_variable(lexer, str_init(generate_id(lexer->id)), MAP, map);
 
-    lexer->read_byte(lexer);
+    read_byte(lexer);
 
     while(lexer->head!='}')
     {
@@ -70,7 +73,7 @@ static Variable* get_map(Lexer *lexer)
             printf("expected :\n");
             return 0;
         }
-        lexer->read_byte(lexer);
+        read_byte(lexer);
 
         assignment=new(Assignment);
         assignment->left_operand=array_init();
@@ -89,10 +92,11 @@ static Variable* get_map(Lexer *lexer)
         skip(lexer);
     }
 
-    lexer->read_byte(lexer);
+    read_byte(lexer);
 
     return map_variable;
 }
+
 
 static Variable* get_array(Lexer *lexer)
 {
@@ -106,7 +110,7 @@ static Variable* get_array(Lexer *lexer)
 
     array_var=new_static_variable(lexer, str_init(generate_id(lexer->id)), ARRAY, array);
 
-    lexer->read_byte(lexer);
+    read_byte(lexer);
     skip(lexer);
 
     while(lexer->head!=']')
@@ -125,12 +129,12 @@ static Variable* get_array(Lexer *lexer)
         list_push(lexer->cur_body, new_data(push_data, PUSH));
 
         if(lexer->head==',')
-            lexer->read_byte(lexer);
+            read_byte(lexer);
 
         skip(lexer);
     }
 
-    lexer->read_byte(lexer);
+    read_byte(lexer);
     skip(lexer);
 
     return array_var;
@@ -140,10 +144,6 @@ error:
     return 0;
 }
 
-void pp(unsigned int *n)
-{
-    printf("\n%f\n", *n);
-}
 
 Variable* get_number(Lexer *lexer)
 {
@@ -155,12 +155,13 @@ Variable* get_number(Lexer *lexer)
 
     if(lexer->head=='0')
     {
-        lexer->read_byte(lexer);
+        read_byte(lexer);
+
         if(lexer->head=='x' || lexer->head=='X')
         {
             loop
             {
-                lexer->read_byte(lexer);
+                read_byte(lexer);
                 if(!is_hex_number(lexer->head))
                     break;
                 str_push(lexer->token, lexer->head);
@@ -174,20 +175,20 @@ Variable* get_number(Lexer *lexer)
         {
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //fseek(lexer->f, -2, SEEK_CUR);
-            //*lexer->head=fgetc(lexer->f);
+            //lexer->read_byte(lexer);
         }
     }
 
     do
     {
         str_push(lexer->token, lexer->head);
-        lexer->read_byte(lexer);
+        read_byte(lexer);
         skip(lexer);
 
         if(lexer->head=='.')
         {
             str_push(lexer->token, ',');
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             skip(lexer);
 
             if(is_real)
@@ -210,11 +211,12 @@ Variable* get_number(Lexer *lexer)
         return new_static_variable(lexer, str_init(generate_id(lexer->id)), CONST_INTEGER, str_to_int(lexer->token));
 }
 
+
 static Variable* get_const_string(Lexer *lexer, char format_quotes)
 {
     String   *const_string=str_init("");
 
-    lexer->read_byte(lexer);
+    read_byte(lexer);
     while(lexer->head!=format_quotes)
     {
         if(lexer->end_of_data)
@@ -225,7 +227,7 @@ static Variable* get_const_string(Lexer *lexer, char format_quotes)
 
         if(lexer->head=='\\')
         {
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             switch(lexer->head)
             {
                 case 'n': str_push(const_string, '\n'); break;
@@ -238,13 +240,14 @@ static Variable* get_const_string(Lexer *lexer, char format_quotes)
         else
             str_push(const_string, lexer->head);
 
-        lexer->read_byte(lexer);
+        read_byte(lexer);
     }
 
-    lexer->read_byte(lexer);
+    read_byte(lexer);
 
     return const_string;
 }
+
 
 static Variable* get_anonim_string(Lexer *lexer)
 {
@@ -259,6 +262,7 @@ static Variable* get_anonim_string(Lexer *lexer)
 
     return const_string_variable;
 }
+
 
 static char get_operand(Lexer *lexer, List *expression)
 {
@@ -308,6 +312,7 @@ static char get_operand(Lexer *lexer, List *expression)
     return 1;
 }
 
+
 static char stack_contains_open_gap(NodeStack *i)
 {
     for(; i; i=i->previouse)
@@ -315,6 +320,7 @@ static char stack_contains_open_gap(NodeStack *i)
             return 1;
     return 0;
 }
+
 
 static void get_operation(List *expression, Stack *s, char operation, int (*prior)(char op))
 {
@@ -328,6 +334,7 @@ static void get_operation(List *expression, Stack *s, char operation, int (*prio
         push(s, operation);
     }
 }
+
 
 static char get_close_brace(Stack *s, List *expression)
 {
@@ -360,6 +367,7 @@ static char get_close_brace(Stack *s, List *expression)
     return 1;
 }
 
+
 static char set_operation_state(
                                 List *expression,
                                 Stack *stack,
@@ -383,6 +391,7 @@ static char set_operation_state(
     return 1;
 }
 
+
 List* lexer_get_expression(Lexer *lexer)
 {
     Variable *operand;
@@ -399,7 +408,7 @@ List* lexer_get_expression(Lexer *lexer)
     {
         while(lexer->head=='-' || lexer->head=='~' || (lexer->head=='!' && !is_true_word(lexer, "!=")))
         {
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             skip(lexer);
 
             if(lexer->head=='-')
@@ -432,6 +441,12 @@ List* lexer_get_expression(Lexer *lexer)
             break;
 
         case ')':
+            if(!stack_contains_open_gap(s->begin))
+            {
+                is_expression=0;
+                break;
+            }
+
             get_close_brace(s, expression);
             is_operation=0;
             is_close_gap=1;
@@ -535,7 +550,7 @@ List* lexer_get_expression(Lexer *lexer)
 
         if(is_expression && !is_compound_operator)
         {
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             skip(lexer);
         }
 
@@ -558,6 +573,7 @@ List* lexer_get_expression(Lexer *lexer)
     return expression;
 }
 
+
 static int condition_prior(char c)
 {
     switch(c)
@@ -568,6 +584,7 @@ static int condition_prior(char c)
         case '&': return 2;
     }
 }
+
 
 List* lexer_get_condition(Lexer *lexer)
 {
@@ -587,7 +604,7 @@ List* lexer_get_condition(Lexer *lexer)
 
         while(lexer->head=='!')
         {
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             skip(lexer);
 
             get_operation(condition, s, '!', condition_prior);
@@ -620,7 +637,7 @@ List* lexer_get_condition(Lexer *lexer)
             break;
 
         case '&':
-            lexer->read_byte(lexer);
+            read_byte(lexer);
 
             if(lexer->head!='&')
             {
@@ -641,7 +658,7 @@ List* lexer_get_condition(Lexer *lexer)
             break;
 
         case '|':
-            lexer->read_byte(lexer);
+            read_byte(lexer);
 
             if(lexer->head!='|')
             {
@@ -667,11 +684,11 @@ List* lexer_get_condition(Lexer *lexer)
 
         if(is_condition)
         {
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             //skip(lexer);
         }
 
-        str_clear(lexer->expr_token);
+        //str_clear(lexer->expr_token);
     }
 
     while(s->begin)

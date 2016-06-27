@@ -2,6 +2,7 @@
 #include "String.h"
 #include <stdio.h>
 
+
 Data* new_data(char *data, char type)
 {
     Data *data_alloc=new(Data);

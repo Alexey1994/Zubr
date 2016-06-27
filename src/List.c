@@ -1,6 +1,7 @@
 #include "List.h"
 #include <stdlib.h>
 
+
 List* list_init()
 {
     List *list=malloc(sizeof(List));
@@ -11,6 +12,7 @@ List* list_init()
 
     return list;
 }
+
 
 void list_push(List *list, char *data)
 {
@@ -27,6 +29,7 @@ void list_push(List *list, char *data)
     list->end=ins;
     list->length++;
 }
+
 
 void list_free(List *list, void (*free_data)(char *data))
 {

@@ -5,34 +5,30 @@
 #include "../List.h"
 #include "../GetData.h"
 
-Tree* lexer(char *source, void (*read_byte(Lexer *lexer)));
-
-void read_byte(Lexer *lexer);
 
 static int variable_cmp(Variable *var1, Variable *var2)
 {
     return str_comparision(var1->name, var2->name);
 }
 
+
 static int variable_str_var_cmp(String *s, Variable *var)
 {
     return str_comparision(s, var->name);
 }
 
-Variable* find_local_var(Tree *variables, String *name)
-{
-    Variable  *finded_var;
 
-    finded_var=tree_find(variables, name, variable_str_var_cmp);
-    if(finded_var)
-        return finded_var;
+static Variable* find_local_variable(Tree *variables, String *name)
+{
+    return tree_find(variables, name, variable_str_var_cmp);
 }
+
 
 static Variable* add_variable(Lexer *lexer, String *name)
 {
     Variable *var;
 
-    if(find_local_var(lexer->cur_function->variables, name))
+    if(find_local_variable(lexer->cur_function->variables, name))
     {
         printf("\nпеременная ");
         str_print(name);
@@ -47,6 +43,7 @@ static Variable* add_variable(Lexer *lexer, String *name)
 
     return var;
 }
+
 
 Variable* new_variable(Lexer *lexer, String *name, char type)
 {
@@ -64,6 +61,7 @@ Variable* new_variable(Lexer *lexer, String *name, char type)
     return var;
 }
 
+
 Variable* new_static_variable(Lexer *lexer, String *name, char type, int *data)
 {
     Variable *var=add_variable(lexer, name);
@@ -77,6 +75,7 @@ Variable* new_static_variable(Lexer *lexer, String *name, char type, int *data)
     return var;
 }
 
+
 static Variable* get_global_variable(String *name, Lexer *lexer)
 {
     Variable  *finded_var;
@@ -84,7 +83,8 @@ static Variable* get_global_variable(String *name, Lexer *lexer)
 
     for(i=lexer->scopes->begin; i; i=i->previouse)
     {
-        finded_var=find_local_var(i->data, name);
+        finded_var=find_local_variable(i->data, name);
+
         if(finded_var)
         {
             finded_var->is_closed=1;
@@ -98,11 +98,12 @@ static Variable* get_global_variable(String *name, Lexer *lexer)
     return 0;
 }
 
+
 Variable* find_variable(String *name, Lexer *lexer)
 {
     Variable  *finded_var;
 
-    finded_var=find_local_var(lexer->cur_function->variables, name);
+    finded_var=find_local_variable(lexer->cur_function->variables, name);
 
     if(!finded_var)
         finded_var=get_global_variable(name, lexer);
@@ -110,20 +111,22 @@ Variable* find_variable(String *name, Lexer *lexer)
     return finded_var;
 }
 
-Function* new_function(String *name, int args_count)
+
+Function* new_function(String *name)
 {
     Function *f=new(Function);
 
-    f->name=name;
-    f->args=array_init();
-    f->body=list_init();
-    f->functions=tree_init();
-    f->return_var=0;
-    f->variables=tree_init();
-    f->count_vars=0;
+    f->name       = name;
+    f->args       = array_init();
+    f->body       = list_init();
+    f->functions  = tree_init();
+    f->return_var = 0;
+    f->variables  = tree_init();
+    f->count_vars = 0;
 
     return f;
 }
+
 
 static void add_block(Lexer *lexer, Data *new_block, char block_type, List *block_body)
 {
@@ -135,22 +138,34 @@ static void add_block(Lexer *lexer, Data *new_block, char block_type, List *bloc
     lexer->cur_block=block_data;
 }
 
+
 //----PRINT--------------------------------------------------------------------------
 
-static void get_print(Lexer *lexer)
+static char get_print(Lexer *lexer)
 {
-    Print    *print_data=new(Print);
+    List     *expression;
+    Print    *print_data;
 
-    print_data->expression=lexer_get_expression(lexer);
+    expression=lexer_get_expression(lexer);
+    if(!expression)
+        return 0;
+
+    print_data=new(Print);
+    print_data->expression=expression;
     list_push(lexer->cur_body, new_data(print_data, PRINT));
+
+    return 1;
 }
 
 char lexer_print(Lexer *lexer)
 {
     do
     {
-        lexer->read_byte(lexer);
-        get_print(lexer);
+        read_byte(lexer);
+
+        if(!get_print(lexer))
+            return 0;
+
         skip(lexer);
     }
     while(lexer->head==',');
@@ -162,12 +177,15 @@ char lexer_print(Lexer *lexer)
 
 char lexer_if(Lexer *lexer)
 {
-    If   *if_data=new(If);
+    List *condition;
+    If   *if_data;
 
-    if_data->cond=lexer_get_condition(lexer);
-    if(!if_data->cond)
+    condition=lexer_get_condition(lexer);
+    if(!condition)
         return 0;
 
+    if_data=new(If);
+    if_data->cond=condition;
     if_data->body=list_init();
     if_data->else_body=list_init();
 
@@ -201,18 +219,13 @@ char lexer_else(Lexer *lexer)
 
             list_push(if_data->else_body, lexer->cur_block);
             lexer->cur_body=else_if_data->body;
-
-            printf("[else if]\n");
         }
         else
-        {
-            printf("[else]\n");
             lexer->cur_block=new_data(if_data->body, ELSE);
-        }
     }
     else
     {
-        printf("else not in if\n");
+        printf("else находится не в if\n");
         return 0;
     }
 
@@ -226,6 +239,7 @@ static char get_next_var(Lexer *lexer, char type)
     String     *var_name=get_token_data(lexer);
     Assignment *assignment;
     Variable   *variable=new_variable(lexer, var_name, type);
+    List       *expression;
 
     if(!variable)
         return 0;
@@ -233,19 +247,18 @@ static char get_next_var(Lexer *lexer, char type)
     skip(lexer);
     if(lexer->head=='=')
     {
-        assignment=new(Assignment);
-        assignment->left_operand=array_init();
-
-        lexer->read_byte(lexer);
+        read_byte(lexer);
         str_clear(lexer->token);
 
-        assignment->right_expression=lexer_get_expression(lexer);
-
-        if(!assignment->right_expression)
+        expression=lexer_get_expression(lexer);
+        if(!expression)
             return 0;
 
-        array_push(assignment->left_operand, new_data(variable, 'v'));
+        assignment=new(Assignment);
+        assignment->left_operand=array_init();
+        assignment->right_expression=expression;
 
+        array_push(assignment->left_operand, new_data(variable, 'v'));
         list_push(lexer->cur_body, new_data(assignment, ASSIGNMENT));
     }
 
@@ -256,7 +269,7 @@ static char get_var(Lexer *lexer, char type)
 {
     do
     {
-        lexer->read_byte(lexer);
+        read_byte(lexer);
 
         if(!get_next_var(lexer, type))
             return 0;
@@ -319,7 +332,7 @@ char lexer_end(Lexer *lexer)
 {
     if(!lexer->blocks_pos->begin)
     {
-        printf("error: end without block\n");
+        printf("end не принадлежит ни одному блоку\n");
         return 0;
     }
 
@@ -335,7 +348,7 @@ char lexer_end(Lexer *lexer)
             break;
 
         case DO:
-            printf("error: do without while\n");
+            printf("do без while\n");
             return 0;
             break;
     }
@@ -393,7 +406,6 @@ char lexer_do(Lexer *lexer)
 {
     Do    *do_data;
 
-    printf("[DO]\n");
     do_data=new(Do);
     do_data->body=list_init();
 
@@ -404,62 +416,77 @@ char lexer_do(Lexer *lexer)
 
 //----FUNCTION-----------------------------------------------------------------------
 
-static char get_function_args(Lexer *lexer)
+static char get_args(Lexer *lexer)
 {
     String   *arg_name;
     Variable *arg;
+    char      is_braces=0;
 
-    skip(lexer);
     if(lexer->head=='(')
     {
-        do
+        read_byte(lexer);
+        is_braces=1;
+    }
+
+    skip(lexer);
+
+    while(lexer->head!=')' && !lexer->end_of_data)
+    {
+        arg_name=get_token_data(lexer);
+        if(!arg_name)
+            return 0;
+
+        arg=new_variable(lexer, arg_name, ARGUMENT);
+        if(!arg)
+            return 0;
+
+        array_push(lexer->cur_function->args, arg);
+
+        skip(lexer);
+
+        if(lexer->head!=',')
+            break;
+
+        read_byte(lexer);
+        skip(lexer);
+    }
+
+    if(lexer->head==')')
+    {
+        if(!is_braces)
         {
-            lexer->read_byte(lexer);
-            skip(lexer);
-
-            if(lexer->head==')')
-            {
-                lexer->read_byte(lexer);
-                return 1;
-            }
-
-            arg_name=get_token_data(lexer);
-            if(!arg_name)
-                return 0;
-
-            arg=new_variable(lexer, arg_name, UNDEFINED);
-            if(!arg)
-                return 0;
-
-            array_push(lexer->cur_function->args, arg);
-            skip(lexer);
-        }
-        while(lexer->head==',');
-
-        if(lexer->head!=')')
-        {
-            printf("expected )\n");
+            printf("отсутствует открывающая скобка\n");
             return 0;
         }
 
-        lexer->read_byte(lexer);
+        read_byte(lexer);
     }
-    else
+    else if(is_braces)
     {
-        printf("expected (\n");
+        printf("отсутствует закрывающая скобка\n");
         return 0;
     }
 
     return 1;
 }
 
+
 Function* get_function(Lexer *lexer, String *function_name)
 {
-    Function *f=new_function(function_name, 0);
+    Function *f;
     Variable *return_variable_name;
 
-    lexer->cur_function=f;
+    if(find_local_variable(lexer->cur_function->variables, function_name))
+    {
+        printf("имя ");
+        str_print(function_name);
+        printf(" уже используется\n");
 
+        return 0;
+    }
+
+    f=new_function(function_name);
+    lexer->cur_function=f;
     new_static_variable(lexer, function_name, FUNCTION, f);
 
     push(lexer->blocks_pos, lexer->cur_block);
@@ -471,26 +498,26 @@ Function* get_function(Lexer *lexer, String *function_name)
     lexer->cur_body=f->body;
     lexer->cur_function=f;
 
-    if(!get_function_args(lexer))
+    skip(lexer);
+
+    if(!get_args(lexer))
     {
         free(f);
         return 0;
     }
 
     skip(lexer);
-    if(is_true_word(lexer, "->"))
+    //if(is_true_word(lexer, "->") || lexer->head=='=')
+    if(lexer->head=='=')
     {
+        read_byte(lexer);
         skip(lexer);
 
         return_variable_name=get_token_data(lexer);
-        f->return_var=add_variable(lexer, return_variable_name);
+        f->return_var=new_variable(lexer, return_variable_name, ARGUMENT);
 
         if(!f->return_var)
             return 0;
-
-        f->return_var->shift=-2-(f->args->length);
-        f->return_var->type=INTEGER;
-        f->return_var->is_closed=0;
     }
     else
     {
@@ -504,10 +531,12 @@ Function* get_function(Lexer *lexer, String *function_name)
 
 char lexer_function(Lexer *lexer)
 {
-    String *function_name;
+    String   *function_name;
     Function *f;
 
     function_name=get_token_data(lexer);
+    if(!function_name)
+        return 0;
 
     if(!get_function(lexer, function_name))
         return 0;
@@ -530,16 +559,14 @@ static Array* get_call_function_args(Lexer *lexer)
         return 0;
     }
 
-    do
+    read_byte(lexer);
+
+    while(!lexer->end_of_data)
     {
-        lexer->read_byte(lexer);
         skip(lexer);
 
         if(lexer->head==')')
-        {
-            lexer->read_byte(lexer);
-            return arg_expr;
-        }
+            break;
 
         arg_expr=lexer_get_expression(lexer);
         if(!arg_expr)
@@ -549,16 +576,20 @@ static Array* get_call_function_args(Lexer *lexer)
         }
         array_push(args, arg_expr);
         skip(lexer);
+
+        if(lexer->head!=',')
+            break;
+
+        read_byte(lexer);
     }
-    while(lexer->head==',');
 
     if(lexer->head!=')')
     {
         array_free(args);
-        printf("expected )\n");
+        printf("\nотсутствует )");
         return 0;
     }
-    lexer->read_byte(lexer);
+    read_byte(lexer);
 
     return args;
 }
@@ -576,9 +607,7 @@ static Call* get_function_call(Lexer *lexer, String *name)
 
     args=get_call_function_args(lexer);
     if(!args)
-    {
         return 0;
-    }
 
     call=new(Call);
     call->args=args;
@@ -595,10 +624,24 @@ Array* get_defined_operand(Lexer *lexer)
     Call     *call;
     char      is_break=0;
     String   *key;
+    String   *function_name;
 
     variable=find_variable(lexer->token, lexer);
     if(!variable)
-        return 0;
+    {
+        if(lexer->head==':')
+        {
+            read_byte(lexer);
+            skip(lexer);
+
+            function_name=str_copy(lexer->token);
+
+            if(!get_function(lexer, function_name))
+                return 0;
+        }
+        else
+            return 0;
+    }
 
     array_push(operand, new_data(variable, 'v'));
 
@@ -608,8 +651,13 @@ Array* get_defined_operand(Lexer *lexer)
 
         switch(lexer->head)
         {
+        /*
+        case ':':
+            printf("OK");
+            break;*/
+
         case '.':
-            lexer->read_byte(lexer);
+            read_byte(lexer);
 
             key=get_token_data(lexer);
 
@@ -628,7 +676,7 @@ Array* get_defined_operand(Lexer *lexer)
             break;
 
         case '[':
-            lexer->read_byte(lexer);
+            read_byte(lexer);
             variable=lexer_get_expression(lexer);
             if(!variable)
                 return 0;
@@ -638,7 +686,7 @@ Array* get_defined_operand(Lexer *lexer)
                 printf("expected ]\n");
                 return 0;
             }
-            lexer->read_byte(lexer);
+            read_byte(lexer);
 
             array_push(operand, new_data(variable, '['));
             break;
@@ -682,7 +730,7 @@ char get_call_or_assignment(Lexer *lexer)
     }
     else if(lexer->head=='=')
     {
-        lexer->read_byte(lexer);
+        read_byte(lexer);
         skip(lexer);
         str_clear(lexer->token);
 
@@ -696,11 +744,12 @@ char get_call_or_assignment(Lexer *lexer)
 
         list_push(lexer->cur_body, new_data(assignment, ASSIGNMENT));
     }
+    /*
     else
     {
         printf("expected =\n");
         return 0;
-    }
+    }*/
 
     return 1;
 }
@@ -721,34 +770,7 @@ char lexer_continue(Lexer *lexer)
     return 1;
 }
 
-//----LOAD CLASS---------------------------------------------------------------------
-
-
-void read(Lexer *lexer)
-{
-    if(lexer->buffered_symbol_pos<lexer->buffered_length)
-    {
-        lexer->head=lexer->buffer[lexer->buffered_symbol_pos];
-        lexer->buffered_symbol_pos++;
-
-        if(lexer->buffered_symbol_pos==lexer->buffered_length)
-        {
-            lexer->buffered_length=0;
-            lexer->buffered_symbol_pos=0;
-        }
-    }
-    else
-    {
-        lexer->head=fgetc(lexer->source);
-
-        if(feof((FILE*)lexer->source))
-            lexer->end_of_data=1;
-    }
-
-    //if(!lexer->end_of_data)
-        //printf("%c", lexer->head);
-}
-
+//----LOAD MODULE--------------------------------------------------------------------
 
 static char get_next_object(Lexer *lexer, Function *class)
 {
@@ -758,7 +780,7 @@ static char get_next_object(Lexer *lexer, Function *class)
 
     //interpretator(lib_main);
 
-    variable=new_static_variable(lexer, var_name, CLASS, class);
+    variable=new_static_variable(lexer, var_name, MODULE, class);
 
     if(!variable)
         return 0;
@@ -770,7 +792,7 @@ static char get_objects(Lexer *lexer, Function *class)
 {
     do
     {
-        lexer->read_byte(lexer);
+        read_byte(lexer);
 
         if(!get_next_object(lexer, class))
             return 0;
@@ -792,7 +814,7 @@ char lexer_load_class(Lexer *lexer)
     if(!f)
         return 0;
 
-    class=run_lexer(f, read);
+    class=run_lexer(f, lexer->get_byte, lexer->end_data);
     interpretator(class);
 
     fclose(f);
@@ -826,7 +848,7 @@ char lexer_include(Lexer *lexer)
 {
     do
     {
-        lexer->read_byte(lexer);
+        read_byte(lexer);
 
         if(!include_program(lexer))
             return 0;
@@ -879,7 +901,7 @@ char lexer_push(Lexer *lexer)
 
     do
     {
-        lexer->read_byte(lexer);
+        read_byte(lexer);
         new_push(lexer, array_operand);
     }
     while(lexer->head==',');

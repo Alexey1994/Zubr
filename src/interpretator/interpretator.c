@@ -2,24 +2,40 @@
 #include "../lexer/lexer_operations.h"
 #include "interpretator_operations.h"
 
-Variable   *undefined;
-
+Variable     *undefined;
 static char (*interpretator_table[256])(char *data, Interpretator *interpretator);
+
 
 void interpretator_table_init()
 {
-    interpretator_table[PRINT]=interpretator_print;
-    interpretator_table[IF]=interpretator_if;
-    interpretator_table[LOOP]=interpretator_loop;
-    interpretator_table[WHILE]=interpretator_while;
-    interpretator_table[DO]=interpretator_do;
-    interpretator_table[BREAK]=interpretator_break;
-    interpretator_table[CONTINUE]=interpretator_continue;
-    interpretator_table[CALL]=interpretator_call;
-    interpretator_table[ASSIGNMENT]=interpretator_assignment;
-    interpretator_table[RETURN]=interpretator_return;
-    interpretator_table[PUSH]=interpretator_push;
+    interpretator_table[PRINT]      = interpretator_print;
+    interpretator_table[IF]         = interpretator_if;
+    interpretator_table[LOOP]       = interpretator_loop;
+    interpretator_table[WHILE]      = interpretator_while;
+    interpretator_table[DO]         = interpretator_do;
+    interpretator_table[BREAK]      = interpretator_break;
+    interpretator_table[CONTINUE]   = interpretator_continue;
+    interpretator_table[CALL]       = interpretator_call;
+    interpretator_table[ASSIGNMENT] = interpretator_assignment;
+    interpretator_table[RETURN]     = interpretator_return;
+    interpretator_table[PUSH]       = interpretator_push;
 }
+
+
+Variable* interpretator_var_alloc(Interpretator *interpretator)
+{
+    Variable *alloc_var=interpretator->stack_head;
+    interpretator->stack_head++;
+    return alloc_var;
+}
+
+
+Variable* interpretator_pop_var(Interpretator *interpretator)
+{
+    interpretator->stack_head--;
+    return interpretator->stack_head;
+}
+
 
 int u=0;
 
@@ -29,8 +45,7 @@ char execute(Interpretator *interpretator, List *body)
     Data  *data;
     char   loop_state;
 
-
-    if(u==1000000)
+    if(u==10000000)
     {
         printf("%d\n", u);
         u=0;
@@ -58,91 +73,84 @@ char execute(Interpretator *interpretator, List *body)
     return LOOP_NORMAL;
 }
 
-Variable* interpretator_var_alloc(Interpretator *interpretator)
-{
-    Variable *alloc_var=interpretator->stack_head;
-    interpretator->stack_head++;
-    return alloc_var;
-}
 
-Variable* interpretator_pop_var(Interpretator *interpretator)
-{
-    interpretator->stack_head--;
-    return interpretator->stack_head;
-}
-
-Variable* eval(Interpretator *interpretator, struct ListNode *i);
-
-static void eval_args(Interpretator *interpretator, Array *args, Array *function_args)
+static void push_args(Interpretator *interpretator, Array *args, Array *function_args, int *new_base)
 {
     int       i;
-    Variable *variable1,
-             *variable2;
+    Variable *function_arg,
+             *current_arg;
     List     *arg_expression;
 
-    for(i=0; i<args->length && i<function_args->length; i++)
+    for(i=0; i<function_args->length; i++)
     {
-
-        variable1=function_args->data[i];
-        arg_expression=args->data[i];
-        variable2=eval(interpretator, arg_expression->begin);
-
-        switch(variable2->type)
+        if(i<args->length)
         {
-        case CONST_INTEGER:
-        case STRING:
-        //case ARRAY:
-            ((int*)interpretator->stack_head)[variable1->shift]=variable2->shift;
-            variable1->type=variable2->type;
-            break;
+            arg_expression=args->data[i];
+            current_arg=eval(interpretator, arg_expression->begin);
 
-        case MAP:
-            //((int*)interpretator->stack_head)[variable1->shift]=variable2->shift;
-            variable1->shift=variable2->shift;
-            variable1->type=variable2->type;
-            break;
-
-        case ARRAY:
-            //((int*)interpretator->stack_head)[variable1->shift]=variable2->shift;
-            variable1->shift=variable2->shift;
-            variable1->type=variable2->type;
-            break;
-
-        case INTEGER:
-            ((int*)interpretator->stack_head)[variable1->shift]=interpretator->stack_base[variable2->shift];
-            variable1->type=INTEGER;
-            break;
-
-        default:
-            printf("\nне определён тип в аллокаторе стека аргументов");
-            break;
+            function_arg=function_args->data[i];
+            new_base[function_arg->shift]=current_arg;
+        }
+        else
+        {
+            function_arg=function_args->data[i];
+            new_base[function_arg->shift]=undefined;
         }
     }
 }
 
+
+static void to_const(Variable *var, Interpretator *interpretator)
+{
+    switch(var->type)
+    {
+    case INTEGER:
+        var->type=CONST_INTEGER;
+        var->shift=interpretator->stack_base[var->shift];
+        break;
+    }
+}
+
+
 Variable* run_function(Interpretator *interpretator, Function *f, Array *args)
 {
-    //Variable *return_var=undefined;
+    Variable *return_var=undefined;
     int       i;
-    int      *prev_base;
-
-    //if(f->return_var)
-        //return_var=interpretator_add_var(interpretator, f->return_var);
+    int      *current_base;
 
     if(f->return_var)
+    {
+        return_var=interpretator->stack_head;
+        return_var->type=UNDEFINED;
+        return_var->shift=-1;
+        return_var->name=f->return_var->name;
+        return_var->is_closed=f->return_var->is_closed;
         interpretator->stack_head++;
 
-    if(args)
-        eval_args(interpretator, args, f->args);
+        interpretator->stack_head=(int*)interpretator->stack_head+1;
+    }
 
-    prev_base=interpretator->stack_base;
-    interpretator->stack_base=(int*)interpretator->stack_head;
-    *interpretator->stack_base=prev_base;
-    interpretator->stack_head=(int*)interpretator->stack_head+f->variables->length+1;
+    current_base=interpretator->stack_head;
+    *current_base=interpretator->stack_base;
+
+    interpretator->stack_head=(int*)interpretator->stack_head+f->variables->length+1; //+base
+
+    if(args)
+        push_args(interpretator, args, f->args, current_base);
+
+    interpretator->stack_base=current_base;
+
+    if(f->return_var)
+        current_base[f->return_var->shift]=return_var;//инициализация return var
 
     execute(interpretator, f->body);
 
-    interpretator->stack_base=*(int*)interpretator->stack_base;
+    if(f->return_var)
+        to_const(return_var, interpretator);
+
+    interpretator->stack_head=(int*)interpretator->stack_head-f->variables->length-1;
+    interpretator->stack_head-=f->args->length;
+    interpretator->stack_base=*interpretator->stack_base;
 
     if(f->return_var)
     {
@@ -154,14 +162,20 @@ Variable* run_function(Interpretator *interpretator, Function *f, Array *args)
     }
 
     if(f->return_var)
-        return f->return_var;
+    {
+        interpretator->stack_head=(int*)interpretator->stack_head-1;
+        interpretator->stack_head--;
+        return return_var;
+    }
     return undefined;
 }
+
 
 static int tree_str_function_cmp(String *s, Function *f)
 {
     return str_comparision(s, f->name);
 }
+
 
 void interpretator(Function *main)
 {
@@ -171,7 +185,7 @@ void interpretator(Function *main)
 
     Interpretator *interpretator=new(Interpretator);
 
-    interpretator->stack=malloc(1000);
+    interpretator->stack=malloc(10000);
     interpretator->stack_head=interpretator->stack;
 
     run_function(interpretator, main, 0);

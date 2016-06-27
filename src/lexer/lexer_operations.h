@@ -15,7 +15,9 @@ typedef struct
 {
     char         end_of_data;
     char        *source;
-    void       (*read_byte)(struct Lexer *this);
+    //void       (*read_byte)(struct Lexer *this);
+    char       (*get_byte)(char *source);
+    char       (*end_data)(char *source);
     char        *buffer;
     unsigned int buffer_length,
                  buffered_length,
@@ -58,7 +60,6 @@ char lexer_N(Lexer *lexer);
 char lexer_load_class(Lexer *lexer);
 char lexer_include(Lexer *lexer);
 
-Variable* find_local_var(Tree *variables, String *name);
 Variable* new_static_variable(Lexer *lexer, String *name, char type, int *data);
 Variable* new_variable(Lexer *lexer, String *name, char type);
 

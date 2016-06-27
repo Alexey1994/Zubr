@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "extends.h"
 
+
 Map* map_init()
 {
     Map *map=new(Map);
@@ -10,10 +11,12 @@ Map* map_init()
     return map;
 }
 
+
 static void map_node_free(MapNode *map_node)
 {
     free(map_node);
 }
+
 
 void map_free(Map *map)
 {
@@ -21,10 +24,12 @@ void map_free(Map *map)
     free(map);
 }
 
+
 static int map_node_comparision(MapNode *map_node1, MapNode *map_node2)
 {
     return str_comparision(map_node1->key, map_node2->key);
 }
+
 
 void map_add(Map *map, String *key, Variable *value)
 {
@@ -36,10 +41,12 @@ void map_add(Map *map, String *key, Variable *value)
     tree_add(map->tree, map_node, map_node_comparision);
 }
 
+
 static int str_map_node_comparision(String *key, MapNode *map_node)
 {
     return str_comparision(key, map_node->key);
 }
+
 
 Variable* map_get(Map *map, String *key)
 {
