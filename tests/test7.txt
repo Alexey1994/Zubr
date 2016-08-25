@@ -1,0 +1,14 @@
+function u(a, b)
+	print a, b
+	u(a)
+end
+
+u(10,'Alexey')
+
+#lib n
+#Library l
+#print l.get()
+
+#print lib.x
+
+#print lib.get()

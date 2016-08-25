@@ -23,22 +23,26 @@ static Data* pop_boolean_expression(Interpretator *interpretator)
 }
 
 
-char eval_condition(Interpretator *interpretator, struct ListNode *i)
+char eval_condition(Interpretator *interpretator, Array *condition)
 {
     Variable *rez;
-    Data     *data;
+    Data     *data=condition->data;
 
-    List     *cond1;
+    Array    *cond1;
     Data     *data1;
     char      type1;
 
-    List     *cond2;
+    Array    *cond2;
     Data     *data2;
     char      type2;
 
-    for(; i; i=i->next)
+    int       i;
+    char    **condition_data=condition->data;
+    int       length=condition->length;
+
+    for(i=0; i<length; i++)
     {
-        data=i->data;
+        data=condition_data[i];
 
         switch(data->type)
         {
@@ -60,7 +64,7 @@ char eval_condition(Interpretator *interpretator, struct ListNode *i)
 
                     if(type1==NOT_EVALUATED_CONDITION)
                     {
-                        eval(interpretator, cond1->begin);
+                        eval(interpretator, cond1);
                         rez=interpretator_pop_var(interpretator);
 
                         if(!rez->shift)
@@ -77,7 +81,7 @@ char eval_condition(Interpretator *interpretator, struct ListNode *i)
 
                     if(type2==NOT_EVALUATED_CONDITION)
                     {
-                        eval(interpretator, cond2->begin);
+                        eval(interpretator, cond2);
                         rez=interpretator_pop_var(interpretator);
 
                         push_boolean_expression(interpretator, rez->shift, EVALUATED_CONDITION);
@@ -104,7 +108,7 @@ char eval_condition(Interpretator *interpretator, struct ListNode *i)
 
     if(type1==NOT_EVALUATED_CONDITION)
     {
-        eval(interpretator, cond1->begin);
+        eval(interpretator, cond1);
         rez=interpretator_pop_var(interpretator);
 
         //printf("\nboolean %d", rez->shift);

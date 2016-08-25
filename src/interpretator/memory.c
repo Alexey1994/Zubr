@@ -2,6 +2,21 @@
 #include "../extends.h"
 
 
+Variable* interpretator_var_alloc(Interpretator *interpretator)
+{
+    Variable *alloc_var=interpretator->stack_head;
+    interpretator->stack_head++;
+    return alloc_var;
+}
+
+
+Variable* interpretator_pop_var(Interpretator *interpretator)
+{
+    interpretator->stack_head--;
+    return interpretator->stack_head;
+}
+
+
 Variable* interpretator_heap_var_alloc(Interpretator *interpretator, Variable *variable)
 {
     Variable *new_variable=new(Variable);
@@ -24,6 +39,11 @@ Variable* interpretator_add_var(Interpretator *interpretator, Variable *var)
 
     switch(var->type)
     {
+    case FUNCTION:
+        new_var->type=FUNCTION;
+        new_var->shift=var->shift;
+        break;
+
     case UNDEFINED:
         ///////////////////////
         //new_var->type=UNDEFINED;

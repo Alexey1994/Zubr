@@ -4,22 +4,24 @@
 #include "String.h"
 #include "tree.h"
 #include "stack.h"
-#include "List.h"
 #include "Array.h"
 
-#define UNDEFINED     0x00
-#define STRING        0x01
-#define CONST_INTEGER 0x02
-#define INTEGER       0x03
-#define GC_INTEGER    0x04
-#define ARRAY         0x05
-#define MAP           0x06
-#define REAL          0x07
-#define CONST_REAL    0x08
-#define BOOLEAN       0x09
-#define FUNCTION      0x0a
-#define MODULE        0x0b
-#define ARGUMENT      0x0c
+#define UNDEFINED        0x00
+#define STRING           0x01
+#define INTEGER          0x02
+#define CONST_INTEGER    0x03
+#define GC_INTEGER       0x04
+#define ARRAY            0x05
+#define MAP              0x06
+#define REAL             0x07
+#define CONST_REAL       0x08
+#define GC_REAL          0x09
+#define BOOLEAN          0x0a
+#define FUNCTION         0x0b
+#define MODULE           0x0c
+#define ARGUMENT         0x0d
+#define NUMERIC_ARGUMENT 0x0e
+#define SYSTEM_FUNCTION  0x0f
 
 #define END           0x01
 #define PRINT         0x02
@@ -28,12 +30,19 @@
 #define LOOP          0x05
 #define BREAK         0x06
 #define CONTINUE      0x07
-#define ELSE          0x09
-#define DO            0x0b
-#define CALL          0x0c
-#define ASSIGNMENT    0x0d
-#define RETURN        0x0e
-#define PUSH          0x0f
+#define ELSE          0x08
+#define DO            0x09
+#define CALL          0x0a
+#define ASSIGNMENT    0x0b
+#define PUSH          0x0c
+#define SYSTEM_CALL   0x0d
+
+typedef struct
+{
+    Array *args;
+    char (*function)();
+}
+SystemCall;
 
 typedef struct
 {
@@ -48,7 +57,8 @@ typedef struct
 {
     String    *name;
     Tree      *functions;
-    List      *body;
+    Array     *body;
+    Tree      *bodies;
     Array     *args;
     Variable  *return_var;
     Tree      *variables;
@@ -56,34 +66,44 @@ typedef struct
 }
 Function;
 
+typedef struct
+{
+    Function  *main_function;
+    //Tree      *variables;
+    Variable **variables;
+    //int        current_variable;
+}
+Module;
 
 typedef struct
 {
-    List  *cond;
-    List  *body;
-    List  *else_body;
+    Module *module;
+    int     current_variable;
+}
+ModuleElement;
+
+
+typedef struct
+{
+    Array  *condition;
+    Array  *body;
+    Array  *else_body;
 }
 If;
 
 typedef struct
 {
-    List *cond,
-         *body;
+    Array *condition;
+    Array *body;
 }
 While;
 
 typedef struct
 {
-    List *cond,
-         *body;
+    Array *condition;
+    Array *body;
 }
 Do;
-
-typedef struct
-{
-    List *expression;
-}
-Print;
 
 typedef struct
 {
@@ -95,14 +115,14 @@ Call;
 typedef struct
 {
     Array *left_operand;
-    List  *right_expression;
+    Array *right_expression;
 }
 Assignment;
 
 typedef struct
 {
-    List *array,
-         *expression;
+    Array *array;
+    Array *expression;
 }
 Push;
 

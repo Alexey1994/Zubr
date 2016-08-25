@@ -1,41 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lexer/lexer.h"
-
+#include "parser/parser.h"
 #include <locale.h>
+
+
+char debug=1;
 
 
 int main()
 {
-    /*
-    FILE *t=fopen("a.txt", "rb");
-    char head=fgetc(t);
-
-    if(is_true_word(t, &head, "fun"))
-    {
-        printf(":)");
-    }
-
-    fclose(t);
-    return 0;*/
-
     setlocale(LC_ALL, "rus");
 
-    FILE *f=fopen("test.txt", "rb");
-    char *main;
+    FILE     *f=fopen("test.txt", "rb");
+    Function *main;
 
-    lexer_init();
-    interpretator_table_init();
-    interpretator_operation_table_init();
+    init_parser();
+    init_interpretator();
 
-    main=run_lexer(f, fgetc, feof);
-
+    main=run_parser(f, fgetc, feof);
+/*
     if(main)
-    {
-        //printf("\ninterpretator\n");
         interpretator(main);
-    }
-
+    else
+        printf("\nскомпилировалось с ошибкой");
+*/
     return 0;
 }

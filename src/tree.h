@@ -12,13 +12,22 @@ typedef struct
 {
     TreeNode *root;
     int       length;
+
+    char    (*add_comparision)(char *, char *);
+    char    (*find_comparision)(char *, char *);
+    void    (*free_data)(char *data);
+    char     *add_data;
+    TreeNode *current_node;
 }Tree;
 
-Tree* tree_init();
-void tree_free(Tree *tree, void(*free_data)(char *data));
+Tree* tree_init(int(*find_comparision)(char *s1, char *s2),
+                int(*add_comparision)(char *s1, char *s2),
+                void (*free_data)(char *data));
 
-void tree_add(Tree *tree, char *data, char(*comparision)(char *, char *));
-char* tree_find(Tree *tree, char *data, int(*comparision)(char *s1, char *s2));
+void tree_free(Tree *tree);
+
+void tree_add(Tree *tree, char *data);
+char* tree_find(Tree *tree, char *data);
 
 void tree_print(Tree *tree, void (*print_data)(char *data));
 

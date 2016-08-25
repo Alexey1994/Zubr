@@ -7,7 +7,8 @@ typedef struct
     char min, max;
 }Id;
 
-Id* id_init(char min, char max);
+Id* init_id(char min, char max);
 char *generate_id(Id *id);
+
 
 #endif // ID_H_INCLUDED

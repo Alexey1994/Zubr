@@ -1,0 +1,66 @@
+int
+float
+struct
+array
+
+############
+
+f:x->y
+	y=x
+end
+
+print f(1)
+print f(1.0)
+
+
+int f1(int x)
+{
+	return x
+}
+
+float f2(float x)
+{
+	return x
+}
+
+printf("%d", f1(1))
+printf("%f", f2(1.0f))
+
+############
+
+f:x,y->z
+	z=x(y)
+end
+
+g:x->y
+	y=x
+end
+
+f(g, 1)
+f(g, 1.0)
+
+
+int f1(int(*x)(int x), int y)
+{
+	return x(y)
+}
+
+float f2(float(*x)(float x), float y)
+{
+	return x(y)
+}
+
+int g1(int x)
+{
+	return x
+}
+
+int g2(float x)
+{
+	return x
+}
+
+printf("%d", f1(g1, 1))
+printf("%f", f2(g2, 1.0f))
+
+############

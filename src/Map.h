@@ -1,7 +1,7 @@
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
 
-#include "Tree.h"
+#include "tree.h"
 #include "String.h"
 #include "types.h"
 

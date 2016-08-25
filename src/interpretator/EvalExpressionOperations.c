@@ -39,6 +39,10 @@ void add(Interpretator *interpretator)
 
             *(float*)&op1->shift+=*(float*)&op2->shift;
             break;
+
+        default:
+            printf("\nнеподдерживаемое сложение переменной ");
+            str_print(op2->name);
         }
         break;
 
@@ -55,8 +59,16 @@ void add(Interpretator *interpretator)
         case CONST_REAL:
             *(float*)&op1->shift+=*(float*)&op2->shift;
             break;
+
+        default:
+            printf("\nнеподдерживаемое сложение переменной ");
+            str_print(op2->name);
         }
         break;
+
+    default:
+        printf("\nнеподдерживаемое сложение переменной ");
+        str_print(op1->name);
     }
 }
 

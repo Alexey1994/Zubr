@@ -1,14 +1,15 @@
-#include "Array.h"
-#include <stdlib.h>
+#include "array.h"
+#include "extends.h"
 
 
-Array* array_init()
+Array* array_init(int reserve)
 {
-    Array *array=malloc(sizeof(Array));
+    Array *array=new(Array);
 
-    array->timer_to_realloc=ARRAY_BLOCK_SIZE;
-    array->data=0;
-    array->length=0;
+    array->reserve       = reserve;
+    array->buffer_length = reserve;
+    array->data          = new_array(char*, reserve);
+    array->length        = 0;
 
     return array;
 }
@@ -16,13 +17,11 @@ Array* array_init()
 
 void array_push(Array *array, char *data)
 {
-    if(array->timer_to_realloc>>ARRAY_TWO_POW_LENGTH)
+    if(array->length==array->buffer_length)
     {
-        array->data=realloc(array->data, sizeof(char*)*(array->length+ARRAY_BLOCK_SIZE));
-        array->timer_to_realloc=1;
+        array->buffer_length+=array->reserve;
+        reallocate_array(array->data, char*, array->buffer_length);
     }
-    else
-        array->timer_to_realloc++;
 
     array->data[array->length]=data;
     array->length++;
@@ -31,13 +30,14 @@ void array_push(Array *array, char *data)
 
 char* array_pop(Array *array)
 {
-
+    array->length--;
+    return array->data[array->length];
 }
 
 
-char* array_get(Array *array, int index)
+void array_clear(Array *array)
 {
-    return array->data[index];
+    array->length=0;
 }
 
 

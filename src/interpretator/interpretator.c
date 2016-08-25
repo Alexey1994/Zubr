@@ -1,47 +1,46 @@
 #include "interpretator.h"
-#include "../lexer/lexer_operations.h"
+//#include "../parser/operations.h"
 #include "interpretator_operations.h"
+#include "EvalExpression.h"
+
+#include "../extends.h"
+#include "../types.h"
 
 Variable     *undefined;
+String       *interpretator_system_name;
 static char (*interpretator_table[256])(char *data, Interpretator *interpretator);
 
 
-void interpretator_table_init()
+void init_interpretator()
 {
-    interpretator_table[PRINT]      = interpretator_print;
-    interpretator_table[IF]         = interpretator_if;
-    interpretator_table[LOOP]       = interpretator_loop;
-    interpretator_table[WHILE]      = interpretator_while;
-    interpretator_table[DO]         = interpretator_do;
-    interpretator_table[BREAK]      = interpretator_break;
-    interpretator_table[CONTINUE]   = interpretator_continue;
-    interpretator_table[CALL]       = interpretator_call;
-    interpretator_table[ASSIGNMENT] = interpretator_assignment;
-    interpretator_table[RETURN]     = interpretator_return;
-    interpretator_table[PUSH]       = interpretator_push;
-}
+    undefined       = new(Variable);
+    undefined->name = str_init("undefined");
+    undefined->type = UNDEFINED;
 
+    interpretator_system_name=str_init("system");
+    interpretator_operation_table_init();
 
-Variable* interpretator_var_alloc(Interpretator *interpretator)
-{
-    Variable *alloc_var=interpretator->stack_head;
-    interpretator->stack_head++;
-    return alloc_var;
-}
-
-
-Variable* interpretator_pop_var(Interpretator *interpretator)
-{
-    interpretator->stack_head--;
-    return interpretator->stack_head;
+    interpretator_table[PRINT]       = interpretator_print;
+    interpretator_table[IF]          = interpretator_if;
+    interpretator_table[LOOP]        = interpretator_loop;
+    interpretator_table[WHILE]       = interpretator_while;
+    interpretator_table[DO]          = interpretator_do;
+    interpretator_table[BREAK]       = interpretator_break;
+    interpretator_table[CONTINUE]    = interpretator_continue;
+    interpretator_table[CALL]        = interpretator_call;
+    interpretator_table[ASSIGNMENT]  = interpretator_assignment;
+    interpretator_table[PUSH]        = interpretator_push;
+    interpretator_table[SYSTEM_CALL] = interpretator_system_call;
 }
 
 
 int u=0;
 
-char execute(Interpretator *interpretator, List *body)
+char execute(Interpretator *interpretator, Array *body)
 {
-    struct ListNode *i=body->begin;
+    char **array_data=body->data;
+    int    length=body->length;
+    int    i;
     Data  *data;
     char   loop_state;
 
@@ -50,22 +49,22 @@ char execute(Interpretator *interpretator, List *body)
         printf("%d\n", u);
         u=0;
     }
+
     u++;
 
-    while(i)
+    for(i=0; i<length;)
     {
-        data=i->data;
+        data=array_data[i];
         loop_state=interpretator_table[data->type](data->data, interpretator);
 
-        i=i->next;
+        i++;
 
         if(loop_state)
         {
             switch(loop_state)
             {
                 case LOOP_BREAK    : return loop_state; break;
-                case LOOP_CONTINUE : i=body->begin; break;
-                case RETURN        : return RETURN; break;
+                case LOOP_CONTINUE : i=0; break;
             }
         }
     }
@@ -79,14 +78,14 @@ static void push_args(Interpretator *interpretator, Array *args, Array *function
     int       i;
     Variable *function_arg,
              *current_arg;
-    List     *arg_expression;
+    Array    *arg_expression;
 
     for(i=0; i<function_args->length; i++)
     {
         if(i<args->length)
         {
             arg_expression=args->data[i];
-            current_arg=eval(interpretator, arg_expression->begin);
+            current_arg=eval(interpretator, arg_expression);
 
             function_arg=function_args->data[i];
             new_base[function_arg->shift]=current_arg;
@@ -171,18 +170,8 @@ Variable* run_function(Interpretator *interpretator, Function *f, Array *args)
 }
 
 
-static int tree_str_function_cmp(String *s, Function *f)
-{
-    return str_comparision(s, f->name);
-}
-
-
 void interpretator(Function *main)
 {
-    undefined=new(Variable);
-    undefined->name=str_init("undefined");
-    undefined->type=UNDEFINED;
-
     Interpretator *interpretator=new(Interpretator);
 
     interpretator->stack=malloc(10000);

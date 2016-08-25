@@ -180,20 +180,20 @@ float str_to_float(String *s)
 
 int str_hex_to_int(String *s)
 {
-    int  i,
-         hex_num=0,
-         hex_byte;
+    int   hex_num=0,
+          hex_byte;
+    char *string;
 
-    for(i=0; s->begin[i]; i++)
+    for(string=s->begin; *string; string++)
     {
-        hex_byte=s->begin[i];
+        hex_byte=*string;
 
         if(is_number(hex_byte))
             hex_byte=hex_byte-'0';
         else
             hex_byte=hex_byte-'a'+10;
 
-        hex_num|=hex_byte<<(i*4);
+        hex_num=(hex_num<<4)|hex_byte;
     }
 
     return hex_num;

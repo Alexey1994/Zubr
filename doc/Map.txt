@@ -1,0 +1,49 @@
+var coords={x, y}
+
+f:coords{x, y}
+	print coords.x
+	print coords.y
+end
+
+f(coords)
+
+######################
+
+var coords={x:0, y:0}
+
+f:coords{x, y}
+	print coords.x
+	print coords.y
+end
+
+f(coords)
+
+######################
+
+var struct={a, b, c, d, e, f}
+
+f:s{a, b}->c
+	c=s.a+s.b
+end
+
+f(coords)
+
+######################
+
+var struct={a, b, c, d, e, f}
+
+f:s{a, b}->c
+	c=s.a+s.b
+end
+
+f(coords)
+
+######################
+
+var struct={a, b, c, d, e, f}
+
+f:s {b>>1, c>>2}->d
+	d=s.b+s.c
+end
+
+f(coords)

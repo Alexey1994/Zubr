@@ -2,7 +2,8 @@
 #define EVALCONDITION_H_INCLUDED
 
 #include "interpretator.h"
+#include "../extends.h"
 
-char eval_condition(Interpretator *interpretator, struct ListNode *i);
+char eval_condition(Interpretator *interpretator, Array *condition);
 
 #endif // EVALCONDITION_H_INCLUDED

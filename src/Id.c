@@ -1,8 +1,9 @@
 #include "Id.h"
 #include <stdlib.h>
+#include <string.h>
 
 
-Id* id_init(char min, char max)
+Id* init_id(char min, char max)
 {
     Id *id=malloc(sizeof(Id));
 

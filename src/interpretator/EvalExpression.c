@@ -3,6 +3,7 @@
 #include "../extends.h"
 #include "../Map.h"
 
+extern String *interpretator_system_name;
 static char* (*op[256])(Interpretator *interpretator);
 
 
@@ -26,26 +27,39 @@ void interpretator_operation_table_init()
 }
 
 
-static Variable* eval_operand(Array *arr, Interpretator *interpretator)
+Variable* eval_operand(Array *arr, Interpretator *interpretator)
 {
-    Data     *data;
+    Data       *data;
 
-    Variable *prev_var,
-             *cur_var;
-    int       i;
-    List     *index;
+    Variable   *prev_var,
+               *cur_var;
+    int         i;
+    Array      *index;
 
-    Array    *array;
-    Map      *map;
-    List     *expression;
-
-    Function *f;
+    Array      *array;
+    Map        *map;
+    Array      *expression;
+    SystemCall *system_call;
+    Function   *function;
+    Variable   *system_variable;
 
     for(i=0; i<arr->length; i++)
     {
         data=arr->data[i];
         switch(data->type)
         {
+        case 's':
+            system_call=data->data;
+
+            system_variable = interpretator->stack_head;
+
+            system_variable->name  = interpretator_system_name;
+            system_variable->type  = CONST_INTEGER;
+            system_variable->shift = interpretator_system_call(system_call, interpretator);
+
+            return system_variable;
+            break;
+
         case 'v':
             cur_var=data->data;
             break;
@@ -64,14 +78,14 @@ static Variable* eval_operand(Array *arr, Interpretator *interpretator)
 
             array=cur_var->shift;
 
-            cur_var=eval(interpretator, index->begin);
+            cur_var=eval(interpretator, index);
 
             switch(cur_var->type)
             {
             case CONST_INTEGER:
                 if(cur_var->shift>=array->length)
                 {
-                    printf("\nout of range in array");
+                    printf("\nвыход за границы массива");
                     return cur_var;
                 }
 
@@ -105,8 +119,8 @@ static Variable* eval_operand(Array *arr, Interpretator *interpretator)
                     return 0;
                 }
 
-                //f=cur_var->shift;
-                //cur_var=find_local_var(f->variables, );
+                function=cur_var->shift;
+                cur_var=tree_find(function->variables, data->data);
 
                 break;
             }
@@ -130,7 +144,7 @@ static Variable* eval_operand(Array *arr, Interpretator *interpretator)
 }
 
 
-Variable* eval(Interpretator *interpretator, struct ListNode *i)
+Variable* eval(Interpretator *interpretator, Array *expression)
 {
     Variable *rez,
              *var,
@@ -139,10 +153,13 @@ Variable* eval(Interpretator *interpretator, struct ListNode *i)
     Data     *data;
     int      *op1_data,
              *op2_data;
+    char    **array_data=expression->data;
+    int       length=expression->length;
+    int       i;
 
-    for(; i; i=i->next)
+    for(i=0; i<length; i++)
     {
-        data=i->data;
+        data=array_data[i];
 
         switch(data->type)
         {

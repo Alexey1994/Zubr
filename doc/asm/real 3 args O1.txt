@@ -1,0 +1,17 @@
+Project title : ить
+Project path  : C:\Users\Lex\Desktop\Программирование\мусор\ить\
+
+Frame function: f (C:\Users\Lex\Desktop\Программирование\мусор\ить\main.c:5)
+Frame address : 0x60ff00
+--------------------------------------------------------------------------------
+0x401340	sub    $0x2c,%esp
+0x401343	flds   0x38(%esp)
+0x401347	fstpl  0x14(%esp)
+0x40134b	flds   0x34(%esp)
+0x40134f	fstpl  0xc(%esp)
+0x401353	flds   0x30(%esp)
+0x401357	fstpl  0x4(%esp)
+0x40135b	movl   $0x403024,(%esp)
+0x401362	call   0x401bc0 <printf>
+0x401367	add    $0x2c,%esp
+0x40136a	ret

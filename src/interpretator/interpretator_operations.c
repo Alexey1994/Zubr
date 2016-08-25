@@ -1,27 +1,33 @@
 #include "interpretator_operations.h"
 #include "../Array.h"
 #include "../Map.h"
+#include "EvalExpression.h"
 #include "EvalCondition.h"
 #include "memory.h"
+#include "../SystemLibrary.h"
 
 
 static Variable* eval_left_operand(Array *operands, Interpretator *interpretator, char new_type, Variable *right_variable)
 {
-    Data     *data;
+    Data           *data;
 
-    Variable *prev_var,
-             *cur_var,
-             *variable;
-    int       i,
-              index;
-    List     *index_expression;
+    Variable       *prev_var,
+                   *cur_var,
+                   *variable;
+    int             i,
+                    index;
+    Array          *index_expression;
 
-    Array    *array;
-    Map      *map;
-    List     *expression;
-    Array    *args;
-    int       j;
-    Function *function;
+    Array          *array;
+    Map            *map;
+    Array          *expression;
+    Array          *args;
+    int             j;
+    Function       *function;
+    int           (*system_function)();
+    SystemLibrary   system_library;
+    String         *string;
+    Variable        temp_type;
 
     for(i=0; i<operands->length; i++)
     {
@@ -50,7 +56,7 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
 
             array=cur_var->shift;
 
-            eval(interpretator, index_expression->begin);
+            eval(interpretator, index_expression);
             cur_var=interpretator_pop_var(interpretator);
 
             switch(cur_var->type)
@@ -70,8 +76,55 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
             break;
 
         case '(':
-            if(cur_var->type!=FUNCTION)
+            args=data->data;
+
+            switch(cur_var->type)
             {
+            case FUNCTION:
+                cur_var=run_function(interpretator, cur_var->shift, data->data);
+                break;
+
+            case SYSTEM_FUNCTION:
+                {
+                    int             new_args[args->length];
+                    int             i;
+                    Variable       *arg;
+                    Array          *list;
+
+                    for(i=0; i<args->length; i++)
+                    {
+                        list=args->data[i];
+                        eval(interpretator, list);
+                        arg=interpretator_pop_var(interpretator);
+
+                        switch(arg->type)
+                        {
+                        case CONST_INTEGER:
+                            //printf("INTEGER %d", arg->shift);
+                            new_args[i]=arg->shift;
+                            break;
+
+                        case CONST_REAL:
+                            new_args[i]=arg->shift;
+                            //printf("{%f}", *(float*)&arg->shift);
+                            break;
+
+                        case STRING:
+                            {
+                            String *string=arg->shift;
+                            //printf("STRING %s", string->begin);
+                            new_args[i]=string->begin;
+                            break;
+                            }
+                        }
+                    }
+
+                    system_function=cur_var->shift;
+                    printf("\nSystem function return %d", run_system_function(system_function, new_args, args->length));
+                }
+                break;
+
+            default:
                 printf("\nvariable ");
                 str_print(cur_var->name);
                 printf(" is not function");
@@ -79,35 +132,41 @@ static Variable* eval_left_operand(Array *operands, Interpretator *interpretator
                 return 0;
             }
 
-            args=data->data;
-
-            cur_var=run_function(interpretator, cur_var->shift, data->data);
             break;
 
         case '.':
 
-            if(cur_var->type!=MAP)
+            switch(cur_var->type)
             {
-                printf("\nvariable ");
+            case MAP:
+                map=cur_var->shift;
+
+                cur_var=map_get(map, data->data);
+                if(!cur_var)
+                {
+                    map_add(map, data->data, undefined);
+                    cur_var=map_get(map, data->data);
+                }
+
+                if(i==operands->length-1)
+                {
+                    cur_var->type=new_type;
+                    return &cur_var->shift;
+                }
+                break;
+
+            case MODULE:
+                function=cur_var->shift;
+                cur_var=tree_find(function->variables, data->data);
+                //str_print(cur_var->name);
+                break;
+
+            default:
+                printf("\nпеременная ");
                 str_print(cur_var->name);
-                printf(" is not map");
+                printf(" не является ни множеством ни классом");
 
                 return undefined;
-            }
-
-            map=cur_var->shift;
-
-            cur_var=map_get(map, data->data);
-            if(!cur_var)
-            {
-                map_add(map, data->data, undefined);
-                cur_var=map_get(map, data->data);
-            }
-
-            if(i==operands->length-1)
-            {
-                cur_var->type=new_type;
-                return &cur_var->shift;
             }
 
             break;
@@ -169,7 +228,7 @@ char interpretator_assignment(Assignment *assignment_data, Interpretator *interp
     Variable   *result;
     char       *left_variable;
 
-    eval(interpretator, assignment_data->right_expression->begin);
+    eval(interpretator, assignment_data->right_expression);
     result=interpretator_pop_var(interpretator);
 
     left_variable=eval_left_operand(assignment_data->left_operand, interpretator, result->type, result);
@@ -214,7 +273,7 @@ char interpretator_assignment(Assignment *assignment_data, Interpretator *interp
 }
 
 
-char interpretator_loop(List *loop_body, Interpretator *interpretator)
+char interpretator_loop(Array *loop_body, Interpretator *interpretator)
 {
     while(execute(interpretator, loop_body)!=LOOP_BREAK);
 
@@ -244,6 +303,42 @@ char interpretator_call(Array *call_data, Interpretator *interpretator)
 }
 
 
+char interpretator_system_call(SystemCall *system_call_data, Interpretator *interpretator)
+{
+    Array          *args                    = system_call_data->args;
+    int             new_args[args->length];
+    int             i;
+    Variable       *arg;
+    Array          *list;
+    String         *string;
+
+    for(i=0; i<args->length; i++)
+    {
+        list=args->data[i];
+        eval(interpretator, list);
+        arg=interpretator_pop_var(interpretator);
+
+        switch(arg->type)
+        {
+        case CONST_INTEGER:
+            new_args[i]=arg->shift;
+            break;
+
+        case CONST_REAL:
+            new_args[i]=arg->shift;
+            break;
+
+        case STRING:
+            string=arg->shift;
+            new_args[i]=string->begin;
+            break;
+        }
+    }
+
+    run_system_function(system_call_data->function, new_args, args->length);
+}
+
+
 static void print_map_node(MapNode *map_node)
 {
     printf("\n");
@@ -256,7 +351,7 @@ static void print_variable(Interpretator *interpretator, Variable *result)
     GCVariable *gc_variable;
     int         i;
     Array      *array;
-    List       *expression;
+    Array      *expression;
     Map        *map;
     //printf("\n^>%d", result);
 
@@ -326,11 +421,11 @@ static void print_variable(Interpretator *interpretator, Variable *result)
 }
 
 
-char interpretator_print(Print *print, Interpretator *interpretator)
+char interpretator_print(Array *expression, Interpretator *interpretator)
 {
     Variable *print_var;
 
-    print_var=eval(interpretator, print->expression->begin);
+    print_var=eval(interpretator, expression);
     interpretator_pop_var(interpretator);
 
     print_variable(interpretator, print_var);
@@ -339,23 +434,8 @@ char interpretator_print(Print *print, Interpretator *interpretator)
 }
 
 
-char interpretator_return(List *return_expression, Interpretator *interpretator)
-{
-    Variable *return_variable=eval(interpretator, return_expression->begin),
-             *stack_variable=(Variable*)interpretator->stack_base-1;
-
-    stack_variable->is_closed=return_variable->is_closed;
-    stack_variable->name=return_variable->name;
-    stack_variable->shift=return_variable->shift;
-    stack_variable->type=return_variable->type;
-
-    return RETURN;
-}
-
-
 char interpretator_push(Push *push_data, Interpretator *interpretator)
 {
-    /*
     Variable *array_variable=eval_operand(push_data->array, interpretator),
              *array_element;
     Array    *array;
@@ -367,10 +447,9 @@ char interpretator_push(Push *push_data, Interpretator *interpretator)
     }
 
     array=array_variable->shift;
-    array_element=interpretator_heap_var_alloc(interpretator, eval(interpretator, push_data->expression->begin));
+    array_element=interpretator_heap_var_alloc(interpretator, eval(interpretator, push_data->expression));
 
     array_push(array, array_element);
-    */
 
     return LOOP_NORMAL;
 }
@@ -380,7 +459,7 @@ char interpretator_if(If *if_data, Interpretator *interpretator)
 {
     printf("\n<if>");
 
-    if(eval_condition(interpretator, if_data->cond->begin))
+    if(eval_condition(interpretator, if_data->condition))
         return execute(interpretator, if_data->body);
     else
         return execute(interpretator, if_data->else_body);
@@ -392,7 +471,7 @@ char interpretator_if(If *if_data, Interpretator *interpretator)
 char interpretator_while(While *while_data, Interpretator *interpretator)
 {
     printf("\n<while>");
-    while(eval_condition(interpretator, while_data->cond->begin) && execute(interpretator, while_data->body)!=LOOP_BREAK) ;
+    while(eval_condition(interpretator, while_data->condition) && execute(interpretator, while_data->body)!=LOOP_BREAK) ;
 
     return LOOP_NORMAL;
 }
@@ -400,8 +479,9 @@ char interpretator_while(While *while_data, Interpretator *interpretator)
 
 char interpretator_do(Do *do_data, Interpretator *intepretator)
 {
+    /*
     if(execute(interpretator, do_data->body)!=LOOP_BREAK)
-        while(do_data->cond && execute(interpretator, do_data->body)!=LOOP_BREAK);
-
+        while(do_data->condition && execute(interpretator, do_data->body)!=LOOP_BREAK);
+*/
     return LOOP_NORMAL;
 }

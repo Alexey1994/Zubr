@@ -1,0 +1,18 @@
+Project title : ить
+Project path  : C:\Users\Lex\Desktop\Программирование\мусор\ить\
+
+Frame function: main (C:\Users\Lex\Desktop\Программирование\мусор\ить\main.c:11)
+Frame address : 0x60ff20
+--------------------------------------------------------------------------------
+0x40136b	push   %ebp
+0x40136c	mov    %esp,%ebp
+0x40136e	and    $0xfffffff0,%esp
+0x401371	sub    $0x10,%esp
+0x401374	call   0x401950 <__main>
+0x401379	movl   $0x40e00000,0x8(%esp)
+0x401381	movl   $0x41000000,0x4(%esp)
+0x401389	movl   $0x41100000,(%esp)
+0x401390	call   0x401340 <f>
+0x401395	mov    $0x0,%eax
+0x40139a	leave
+0x40139b	ret

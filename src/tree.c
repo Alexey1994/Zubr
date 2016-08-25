@@ -1,4 +1,5 @@
 #include "tree.h"
+#include "extends.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,12 +8,17 @@ const char ERROR=1,
            OK=0;
 
 
-Tree* tree_init()
+Tree* tree_init(int(*find_comparision)(char *s1, char *s2),
+                int(*add_comparision)(char *s1, char *s2),
+                void (*free_data)(char *data))
 {
-    Tree *tree=malloc(sizeof(Tree));
+    Tree *tree=new(Tree);
 
-    tree->root=0;
-    tree->length=0;
+    tree->root             = 0;
+    tree->length           = 0;
+    tree->find_comparision = find_comparision;
+    tree->add_comparision  = add_comparision;
+    tree->free_data        = free_data;
 
     return tree;
 }
@@ -22,6 +28,7 @@ static unsigned char height(TreeNode *p)
 {
     if(p)
         return p->height;
+
     return 0;
 }
 
@@ -47,6 +54,7 @@ static void fixheight(TreeNode *p)
 static TreeNode* rotateright(TreeNode *p)
 {
     TreeNode *q=p->left;
+
     p->left=q->right;
     q->right=p;
     fixheight(p);
@@ -59,6 +67,7 @@ static TreeNode* rotateright(TreeNode *p)
 static TreeNode* rotateleft(TreeNode *q)
 {
     TreeNode *p=q->right;
+
     q->right=p->left;
     p->left=q;
     fixheight(q);
@@ -71,10 +80,12 @@ static TreeNode* rotateleft(TreeNode *q)
 static TreeNode* balance(TreeNode *p)
 {
     fixheight(p);
+
     if(bfactor(p)==2)
     {
         if(bfactor(p->right)<0)
-            p->right=rotateright((p->right));
+            p->right=rotateright(p->right);
+
         return rotateleft(p);
     }
 
@@ -82,6 +93,7 @@ static TreeNode* balance(TreeNode *p)
     {
         if(bfactor(p->left)>0)
             p->left=rotateleft(p->left);
+
         return rotateright(p);
     }
 
@@ -89,26 +101,30 @@ static TreeNode* balance(TreeNode *p)
 }
 
 
-static char *tree_add_data;
-static char (*tree_comparision)(char *, char *);
-
-static TreeNode *tree_add_node(TreeNode *node)
+static TreeNode *tree_add_node(Tree *tree)
 {
+    TreeNode *node=tree->current_node;
     int cmp;
 
     if(node)
     {
-        cmp=tree_comparision(tree_add_data, node->data);
+        cmp=tree->add_comparision(tree->add_data, node->data);
 
         if(cmp<0)
-            node->left=tree_add_node(node->left);
+        {
+            tree->current_node=node->left;
+            node->left=tree_add_node(tree);
+        }
         else
-            node->right=tree_add_node(node->right);
+        {
+            tree->current_node=node->right;
+            node->right=tree_add_node(tree);
+        }
     }
     else
     {
         node=malloc(sizeof(TreeNode));
-        node->data=tree_add_data;
+        node->data=tree->add_data;
         node->left=0;
         node->right=0;
         node->height=1;
@@ -118,19 +134,22 @@ static TreeNode *tree_add_node(TreeNode *node)
 }
 
 
-void tree_add(Tree *tree, char *data, char(*comparision)(char *, char *))
+void tree_add(Tree *tree, char *data)
 {
-    tree_add_data=data;
-    tree_comparision=comparision;
-    tree->root=tree_add_node(tree->root);
+    tree->add_data=data;
+
+    tree->current_node=tree->root;
+    tree->root=tree_add_node(tree);
+
     tree->length++;
 }
 
 
-char* tree_find(Tree *tree, char *data, int(*comparision)(char *s1, char *s2))
+char* tree_find(Tree *tree, char *data)
 {
-    TreeNode *i=tree->root;
-    int cmp;
+    TreeNode  *i=tree->root;
+    int      (*comparision)(char *s1, char *s2)=tree->find_comparision;
+    int        cmp;
 
     while(i)
     {
@@ -179,23 +198,28 @@ void tree_print(Tree *tree, void (*print_data)(char *data))
 }
 
 
-static void (*tree_free_func)(char *data);
-
-static void tree_free_node(TreeNode *node)
+static void tree_free_node(Tree *tree)
 {
+    TreeNode *node=tree->current_node;
+
     if(node!=0)
     {
-        tree_free_func(node->data);
-        tree_free_node(node->left);
-        tree_free_node(node->right);
+        tree->free_data(node->data);
+
+        tree->current_node=node->left;
+        tree_free_node(tree);
+
+        tree->current_node=node->right;
+        tree_free_node(tree);
+
         free(node);
     }
 }
 
 
-void tree_free(Tree *tree, void(*free_data)(char *data))
+void tree_free(Tree *tree)
 {
-    tree_free_func=free_data;
+    tree->current_node=tree->root;
     tree_free_node(tree->root);
     free(tree);
 }

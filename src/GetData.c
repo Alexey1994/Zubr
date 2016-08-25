@@ -5,6 +5,7 @@ char is_number(char c)
 {
     if(c>='0' && c<='9')
         return 1;
+
     return 0;
 }
 
@@ -13,6 +14,7 @@ char is_hex_number(char c)
 {
     if((c>='0' && c<='9') || (c>='a' && c<='f') || (c>='A' && c<='F'))
         return 1;
+
     return 0;
 }
 
@@ -21,6 +23,7 @@ char is_letter(char c)
 {
     if((c>='a' && c<='z') || (c>='A' && c<='Z') || c=='_')
         return 1;
+
     return 0;
 }
 
@@ -29,110 +32,114 @@ char is_space(char c)
 {
     if(c==' ' || c=='\n' || c=='\r' || c=='\t')
         return 1;
+
     return 0;
 }
 
 
-void skip(Lexer *lexer)
+void skip(Parser *parser)
 {
-    while(!lexer->end_of_data && is_space(lexer->head))
-        read_byte(lexer);
+    while(!parser->end_of_data && is_space(parser->head))
+        read_byte(parser);
 }
 
 
-String* get_word(Lexer *lexer, String *token)
+String* get_word(Parser *parser, String *token)
 {
-    while(is_letter(lexer->head) && !lexer->end_of_data)
+    if(is_number(parser->head))
     {
-        str_push(token, lexer->head);
-        read_byte(lexer);
+        printf("\nошибка чтения токена: первой буквой токена не может быть число");
+        return token;
+    }
+
+    while((is_letter(parser->head) || is_number(parser->head)) && !parser->end_of_data)
+    {
+        str_push(token, parser->head);
+        read_byte(parser);
     }
 
     return token;
 }
 
 
-String* get_token_data(Lexer *lexer)
+String* get_new_token(Parser *parser)
 {
     String *token=0;
 
-    skip(lexer);
-    if(is_letter(lexer->head))
+    skip(parser);
+
+    if(is_letter(parser->head))
     {
         token=str_init("");
-        get_word(lexer, token);
+        get_word(parser, token);
     }
 
     return token;
 }
 
 
-void get_token(Lexer *lexer, String *token)
+void get_token(Parser *parser, String *token)
 {
     str_clear(token);
-    skip(lexer);
-    get_word(lexer, token);
+    skip(parser);
+    get_word(parser, token);
 }
 
 
-char is_true_word(Lexer *lexer, char *word)
+char is_true_word(Parser *parser, char *word)
 {
     unsigned int word_length=0,
                  symbol_pos_in_buffer;
-    char         default_symbol=lexer->head;
+    char         default_symbol=parser->head;
 
     for(; *word; word++)
     {
-        if(lexer->end_of_data || *word!=lexer->head)
+        if(parser->end_data(parser->source) || *word!=parser->head)
         {
-            lexer->head=default_symbol;
-            lexer->buffered_length+=word_length;
+            parser->head=default_symbol;
+            parser->buffered_length+=word_length;
+
+            if(word_length)
+                parser->end_of_data=0;
+
             return 0;
         }
 
-        read_byte(lexer);
+        read_byte(parser);
 
-        //if(!lexer->end_of_data)
-        {
-        symbol_pos_in_buffer=lexer->buffered_length+word_length;
+        symbol_pos_in_buffer=parser->buffered_length+word_length;
 
-        if(symbol_pos_in_buffer == lexer->buffer_length)
+        if(symbol_pos_in_buffer == parser->buffer_length)
         {
-            lexer->buffer_length+=LEXER_BUFFER_SIZE;
-            lexer->buffer=realloc(lexer->buffer, lexer->buffer_length);
+            parser->buffer_length+=PARSER_BUFFER_SIZE;
+            parser->buffer=realloc(parser->buffer, parser->buffer_length);
         }
 
-        lexer->buffer[symbol_pos_in_buffer]=lexer->head;
+        parser->buffer[symbol_pos_in_buffer]=parser->head;
 
         word_length++;
-        }
     }
 
     return 1;
 }
 
 
-void read_byte(Lexer *lexer)
+void read_byte(Parser *parser)
 {
-    if(lexer->buffered_symbol_pos<lexer->buffered_length)
+    if(parser->buffered_symbol_pos<parser->buffered_length)
     {
-        lexer->head=lexer->buffer[lexer->buffered_symbol_pos];
-        lexer->buffered_symbol_pos++;
+        parser->head=parser->buffer[parser->buffered_symbol_pos];
+        parser->buffered_symbol_pos++;
 
-        if(lexer->buffered_symbol_pos==lexer->buffered_length)
+        if(parser->buffered_symbol_pos==parser->buffered_length)
         {
-            lexer->buffered_length=0;
-            lexer->buffered_symbol_pos=0;
+            parser->buffered_length=0;
+            parser->buffered_symbol_pos=0;
         }
     }
     else
-    {
-        lexer->head=lexer->get_byte(lexer->source);
+        parser->head=parser->get_byte(parser->source);
 
-        if(lexer->end_data(lexer->source))
-            lexer->end_of_data=1;
-    }
-
-    //if(!lexer->end_of_data)
-        //printf("%c", lexer->head);
+    if(parser->end_data(parser->source) && !parser->buffered_length)
+        parser->end_of_data=1;
 }
