@@ -3,7 +3,6 @@
 
 #include "String.h"
 #include "tree.h"
-#include "stack.h"
 #include "Array.h"
 
 #define UNDEFINED        0x00

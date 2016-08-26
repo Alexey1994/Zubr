@@ -171,10 +171,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/prefix tree.h" />
-		<Unit filename="../src/stack.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/stack.h" />
 		<Unit filename="../src/translator/translator.c">
 			<Option compilerVar="CC" />
 		</Unit>

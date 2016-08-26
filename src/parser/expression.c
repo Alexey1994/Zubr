@@ -103,33 +103,36 @@ void init_expression()
 }
 
 
-static char stack_contains_open_gap(NodeStack *i)
+static char stack_contains_open_gap(Array *stack)
 {
-    for(; i; i=i->previouse)
-        if(i->data=='(')
+    int    i=stack->length-1;
+    char **data=stack->data;
+
+    for(; i>=0; i--)
+        if(data[i]=='(')
             return 1;
 
     return 0;
 }
 
 
-static void add_operation(Array *expression, Stack *s, int operation, int *prior)
+static void add_operation(Array *expression, Array *stack, int operation, int *prior)
 {
-    if(!s->begin || prior[(int)s->begin->data]<prior[operation])
-        push(s, operation);
+    if(array_empty(stack) || prior[(int)array_top(stack)] < prior[operation])
+        array_push(stack, operation);
     else
     {
-        while(s->begin && prior[(int)s->begin->data] >= prior[operation])
-            array_push(expression, new_data(pop(s), OPERATION));
+        while(!array_empty(stack) && prior[(int)array_top(stack)] >= prior[operation])
+            array_push(expression, new_data(array_pop(stack), OPERATION));
 
-        push(s, operation);
+        array_push(stack, operation);
     }
 }
 
 
-static char get_close_brace(Stack *s, Array *expression)
+static char get_close_brace(Array *stack, Array *expression)
 {
-    if(s->begin->data=='(')
+    if(array_top(stack)=='(')
     {
         printf("\nскобки без выражения излишни");
         return 0;
@@ -137,17 +140,17 @@ static char get_close_brace(Stack *s, Array *expression)
 
     do
     {
-        if(!s->begin)
+        if(array_empty(stack))
         {
             printf("\nотсутствует (");
             return 0;
         }
 
-        array_push(expression, new_data(pop(s), OPERATION));
+        array_push(expression, new_data(array_pop(stack), OPERATION));
     }
-    while(s->begin->data!='(');
+    while(array_top(stack)!='(');
 
-    pop(s);
+    array_pop(stack);
 
     return 1;
 }
@@ -155,7 +158,7 @@ static char get_close_brace(Stack *s, Array *expression)
 
 Array* parser_get_expression(Parser *parser)
 {
-    Stack    *s                     = stack_init();
+    Array    *stack                 = array_init(4);
     Array    *expression            = array_init(8);
 
     char      is_expression         = 1,
@@ -178,9 +181,9 @@ Array* parser_get_expression(Parser *parser)
             skip(parser);
 
             if(parser->head=='-')
-                add_operation(expression, s, '_', priorities);
+                add_operation(expression, stack, '_', priorities);
             else
-                add_operation(expression, s, parser->head, priorities);
+                add_operation(expression, stack, parser->head, priorities);
         }
 
         skip(parser);
@@ -199,7 +202,7 @@ Array* parser_get_expression(Parser *parser)
         switch(parser->head)
         {
         case '(':
-            push(s, '(');
+            array_push(stack, '(');
             read_byte(parser);
 
             is_operation=1;
@@ -207,13 +210,13 @@ Array* parser_get_expression(Parser *parser)
             break;
 
         case ')':
-            if(!stack_contains_open_gap(s->begin))
+            if(!stack_contains_open_gap(stack))
             {
                 is_expression=0;
                 break;
             }
 
-            get_close_brace(s, expression);
+            get_close_brace(stack, expression);
             read_byte(parser);
 
             is_operation=0;
@@ -233,7 +236,7 @@ Array* parser_get_expression(Parser *parser)
                         return 0;
                     }
 
-                    add_operation(expression, s, expression_operations[i].number_operation, priorities);
+                    add_operation(expression, stack, expression_operations[i].number_operation, priorities);
 
                     is_operation=1;
                     is_close_gap=0;
@@ -248,9 +251,9 @@ Array* parser_get_expression(Parser *parser)
         str_clear(parser->expr_token);
     }
 
-    while(s->begin)
+    while(!array_empty(stack))
     {
-        op=pop(s);
+        op=array_pop(stack);
 
         if(op=='(')
         {
@@ -276,7 +279,7 @@ Array* parser_get_expression(Parser *parser)
 Array* parser_get_condition(Parser *parser)
 {
     Variable *operand;
-    Stack    *s                      = stack_init();
+    Array    *stack                  = array_init(2);
     Array    *condition              = array_init(4),
              *arithmetic_expression;
 
@@ -293,7 +296,7 @@ Array* parser_get_condition(Parser *parser)
 
         while(is_true_word(parser, "not"))
         {
-            add_operation(condition, s, 'n', priorities);
+            add_operation(condition, stack, 'n', priorities);
             skip(parser);
         }
 
@@ -312,13 +315,13 @@ Array* parser_get_condition(Parser *parser)
         switch(parser->head)
         {
         case '(':
-            push(s, '(');
+            array_push(stack, '(');
             is_operation=1;
             is_close_gap=0;
             break;
 
         case ')':
-            get_close_brace(s, condition);
+            get_close_brace(stack, condition);
             is_operation=0;
             is_close_gap=1;
             break;
@@ -336,7 +339,7 @@ Array* parser_get_condition(Parser *parser)
                         return 0;
                     }
 
-                    add_operation(condition, s, condition_operations[i].number_operation, priorities);
+                    add_operation(condition, stack, condition_operations[i].number_operation, priorities);
 
                     is_operation=1;
                     is_close_gap=0;
@@ -351,9 +354,9 @@ Array* parser_get_condition(Parser *parser)
             read_byte(parser);
     }
 
-    while(s->begin)
+    while(!array_empty(stack))
     {
-        op=pop(s);
+        op=array_pop(stack);
 
         if(op=='(')
         {

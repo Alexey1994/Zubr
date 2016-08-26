@@ -17,7 +17,7 @@ char parser_while(Parser *parser)
         do_data=parser->cur_block->data;
         do_data->condition=condition;
 
-        parser->cur_block=pop(parser->blocks_pos);
+        parser->cur_block=array_pop(parser->blocks_pos);
         update_cur_body(parser);
     }
     else

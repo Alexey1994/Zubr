@@ -5,7 +5,7 @@
 
 char parser_end(Parser *parser)
 {
-    if(!parser->blocks_pos->begin)
+    if(array_empty(parser->blocks_pos))
     {
         printf("end не принадлежит ни одному блоку\n");
         return 0;
@@ -17,7 +17,7 @@ char parser_end(Parser *parser)
     switch(parser->cur_block->type)
     {
         case FUNCTION:
-            parser->cur_scope=pop(parser->scopes);
+            parser->cur_scope=array_pop(parser->scopes);
             parser->is_end_function=1;
             break;
 
@@ -31,7 +31,7 @@ char parser_end(Parser *parser)
             break;
     }
 
-    parser->cur_block=pop(parser->blocks_pos);
+    parser->cur_block=array_pop(parser->blocks_pos);
     update_cur_body(parser);
 
     return 1;

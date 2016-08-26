@@ -137,8 +137,8 @@ Function* run_parser(char *source, char (*get_byte)(Parser *parser), char (*end_
     parser_alloc->get_byte            = get_byte;
     parser_alloc->end_data            = end_of_data;
     parser_alloc->token               = str_init("");
-    parser_alloc->blocks_pos          = stack_init();
-    parser_alloc->scopes              = stack_init();
+    parser_alloc->blocks_pos          = array_init(2);
+    parser_alloc->scopes              = array_init(1);
     parser_alloc->id                  = init_id(128, 255);
     parser_alloc->expr_token          = str_init("");
 
@@ -162,7 +162,7 @@ Function* run_parser(char *source, char (*get_byte)(Parser *parser), char (*end_
     if(!get_function_body(parser_alloc))
         return 0;
 
-    if(parser_alloc->blocks_pos->begin)
+    if(!array_empty(parser_alloc->blocks_pos))
     {
         printf("отсутствует end\n");
         return 0;

@@ -13,6 +13,10 @@ Array;
 Array* array_init(int reserve);
 void array_push(Array *array, char *data);
 char* array_pop(Array *array);
+
+char* array_top(Array *array);
+char array_empty(Array *array);
+
 void array_clear(Array *array);
 void array_free(Array *array);
 

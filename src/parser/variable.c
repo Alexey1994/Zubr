@@ -40,12 +40,13 @@ Variable* new_static_variable(Parser *parser, String *name, char type, int *data
 
 static Variable* get_global_variable(String *name, Parser *parser)
 {
-    Variable  *finded_var;
-    NodeStack *i;
+    Variable   *finded_var;
+    char      **stack_data   = parser->scopes->data;
+    int         i;
 
-    for(i=parser->scopes->begin; i; i=i->previouse)
+    for(i=parser->scopes->length-1; i>=0; i--)
     {
-        finded_var=tree_find(i->data, name);
+        finded_var=tree_find(stack_data[i], name);
 
         if(finded_var)
         {

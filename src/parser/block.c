@@ -5,7 +5,7 @@ void add_block(Parser *parser, char *new_block, char block_type, Array *block_bo
 {
     Data *block_data=new_data(new_block, block_type);
 
-    push(parser->blocks_pos, parser->cur_block);
+    array_push(parser->blocks_pos, parser->cur_block);
     array_push(parser->cur_body, block_data);
     parser->cur_body=block_body;
     parser->cur_block=block_data;

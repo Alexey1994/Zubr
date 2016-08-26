@@ -7,7 +7,6 @@
 #include "../types.h"
 #include "../extends.h"
 #include "../tree.h"
-#include "../stack.h"
 #include "../Array.h"
 #include "../Id.h"
 
@@ -26,8 +25,8 @@ typedef struct
                  buffered_symbol_pos;
 
     char         head;
-    Stack       *blocks_pos;
-    Stack       *scopes;
+    Array       *blocks_pos;
+    Array       *scopes;
     Tree        *cur_scope;
     Array       *cur_body;
     Data        *cur_block;

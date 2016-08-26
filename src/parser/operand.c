@@ -77,10 +77,10 @@ Variable* get_function(Parser *parser, String *function_name)
 
     parser->cur_function=f;
 
-    push(parser->blocks_pos, parser->cur_block);
+    array_push(parser->blocks_pos, parser->cur_block);
     parser->cur_block=new_data(f, FUNCTION);
 
-    push(parser->scopes, parser->cur_scope);
+    array_push(parser->scopes, parser->cur_scope);
     parser->cur_scope=f->variables;
 
     parser->cur_body=f->body;

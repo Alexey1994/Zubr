@@ -41,6 +41,18 @@ void array_clear(Array *array)
 }
 
 
+char* array_top(Array *array)
+{
+    return array->data[array->length-1];
+}
+
+
+char array_empty(Array *array)
+{
+    return !array->length;
+}
+
+
 void array_free(Array *array)
 {
     free(array->data);
