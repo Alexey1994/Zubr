@@ -28,9 +28,12 @@ int main()
 */
 
     FILE *file_translator=fopen("translator.txt", "rb");
+    FILE *out_file=fopen("out.txt", "wb");
 
     init_translator_parser_states();
-    parse_translator(file_translator, fgetc, feof);
+    parse_translator(file_translator, fgetc, feof, out_file, fputc);
+
+    fclose(out_file);
 
     return 0;
 }

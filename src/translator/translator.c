@@ -248,8 +248,13 @@ void convert_from_postfix_to_infix_notation(Array *expression)
 #include "translator.h"
 #include "get data.h"
 
+#include "commands/push.h"
+#include "commands/out.h"
+#include "commands/state.h"
+
 
 static PrefixTree* translator_states;
+static PrefixTree* translator_commands;
 
 
 void init_translator_parser_states()
@@ -259,22 +264,60 @@ void init_translator_parser_states()
     translator_states=create_prefix_tree();
 
     state=create_prefix_tree();
-    add_data_in_prefix_tree(state, "condition", 0);
+    add_data_in_prefix_tree(state, "condition", 1);
 
     add_data_in_prefix_tree(translator_states, "if", state);
 
 
     state=create_prefix_tree();
-    add_data_in_prefix_tree(state, "condition", 0);
+    add_data_in_prefix_tree(state, "condition", 1);
 
     add_data_in_prefix_tree(translator_states, "while", state);
+
+
+    translator_commands=create_prefix_tree();
+
+    add_data_in_prefix_tree(translator_commands, "out"  , translator_parser_command_out);
+    add_data_in_prefix_tree(translator_commands, "push" , translator_parser_command_push);
+    add_data_in_prefix_tree(translator_commands, "state", translator_parser_command_state);
 }
 
 
 void parse_translator_body(TranslatorParser *parser, PrefixTree *state)
 {
+    void (*command)(TranslatorParser *parser);
+    char  *command_name;
+
+    skip_translator_parser(parser);
+
+    if(state)
+    if(find_data_in_prefix_tree(state, "condition"))
+        printf("<condition>");
+
     while(parser->head!='}' && !parser->end_data)
     {
+        command_name=get_token_translator_parser(parser);
+
+        command=0;
+
+        if(state)
+            command=find_data_in_prefix_tree(state, command_name);
+
+        if(command)
+            command(parser);
+        else
+        {
+            command=find_data_in_prefix_tree(translator_commands, command_name);
+
+            if(!command)
+            {
+                printf("комманда %s не найдена\n", command_name);
+                return;
+            }
+
+            command(parser);
+        }
+
         skip_translator_parser(parser);
     }
 }
@@ -310,15 +353,22 @@ char parse_translator_state(TranslatorParser *parser, Translator *translator)
 }
 
 
-TranslatorParser* parse_translator(char *source, char (*get_byte)(char *source), char (*end_of_data)(char *source))
+TranslatorParser* parse_translator(char  *in_source,
+                                   char (*get_byte)(char *source),
+                                   char (*end_of_data)(char *source),
+                                   char  *out_source,
+                                   void (*out_byte)(char data, char *source))
 {
     TranslatorParser *parser     = new(TranslatorParser);
     Translator       *translator = new(Translator);
 
     parser->end_of_data = end_of_data;
     parser->get_byte    = get_byte;
-    parser->source      = source;
+    parser->in_source   = in_source;
     parser->end_data    = 0;
+    parser->out_source  = out_source;
+    parser->out_byte    = out_byte;
+    parser->token       = str_init("");
 
     translator->states = create_prefix_tree();
 
@@ -326,12 +376,8 @@ TranslatorParser* parse_translator(char *source, char (*get_byte)(char *source),
 
     while(!parser->end_data)
     {
-
         if(!parse_translator_state(parser, translator))
             return 0;
-        //printf("%c", parser->head);
-
-        get_byte_translator_parser(parser);
     }
 
     return translator;

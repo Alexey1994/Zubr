@@ -1,14 +1,14 @@
 if
 {
-	
+	out 'if '
 }
 
 while
 {
-	
+	out 'while '
 }
 
 expression
 {
-	
+
 }
