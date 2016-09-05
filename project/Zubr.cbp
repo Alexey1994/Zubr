@@ -178,6 +178,30 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/prefix tree.h" />
+		<Unit filename="../src/translator/commands/out.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/translator/commands/out.h">
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/translator/commands/pop.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="../src/translator/commands/push.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/translator/commands/push.h">
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/translator/commands/state.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/translator/commands/state.h">
+			<Option target="Debug" />
+		</Unit>
 		<Unit filename="../src/translator/get data.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
