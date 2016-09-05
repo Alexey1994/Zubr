@@ -15,15 +15,28 @@ Operation;
 
 static int       length_condition_operations=2;
 static Operation condition_operations[2];
+static int       length_condition_unary_operation=1;
+static Operation condition_unary_operations[1];
 
 static int       length_expression_operations=14;
 static Operation expression_operations[14];
+static int       length_expression_unary_operation=2;
+static Operation expression_unary_operations[2];
 
 int              priorities[128];
 
 
 void init_expression()
 {
+    expression_unary_operations[0].operation="-";
+    expression_unary_operations[0].number_operation='_';
+
+    expression_unary_operations[1].operation="~";
+    expression_unary_operations[1].number_operation='~';
+/*
+    expression_unary_operations[2].operation="!";
+    expression_unary_operations[2].number_operation='_';
+*/
     expression_operations[0].operation="|";
     expression_operations[0].number_operation='|';
 
@@ -89,6 +102,9 @@ void init_expression()
     priorities['~']=8;
     priorities['_']=9; //_ - унарный -
 
+
+    condition_unary_operations[0].operation="not";
+    condition_unary_operations[0].number_operation='n';
 
     condition_operations[0].operation="or";
     condition_operations[0].number_operation='o';
@@ -156,7 +172,19 @@ static char get_close_brace(Array *stack, Array *expression)
 }
 
 
-Array* parser_get_expression(Parser *parser)
+static char get_expression_operand(Parser *parser, Array *expression)
+{
+    if(!get_operand(parser, expression))
+        return 0;
+
+    return 1;
+}
+
+
+Array* get_expression_in_postfix_notation(Parser *parser,
+                                          char (*get_operand_function)(Parser *parser, Array *expression),
+                                          Operation *unary_operations, int length_unary_operations,
+                                          Operation *binary_operations, int length_binary_operations)
 {
     Array    *stack                 = array_init(4);
     Array    *expression            = array_init(8);
@@ -165,36 +193,40 @@ Array* parser_get_expression(Parser *parser)
               is_operation          = 0,
               is_close_gap          = 0,
               op;
+
+    char      is_unary_operation;
     int       i;
 
     while(!parser->end_of_data && is_expression)
     {
-        while(parser->head=='-' || parser->head=='~' || parser->head=='!')
+        is_unary_operation=1;
+
+        if(!is_close_gap)
         {
-            if(is_true_word(parser, "!="))
+            do
             {
-                printf("\nоператор != без операнда, ожидался унарный ! (побитовое \"не\")");
-                return 0;
+                is_unary_operation=0;
+                skip(parser);
+
+                for(i=0; i<length_unary_operations; i++)
+                {
+                    if(is_true_word(parser, unary_operations[i].operation))
+                    {
+                        add_operation(expression, stack, unary_operations[i].number_operation, priorities);
+                        is_unary_operation=1;
+                        break;
+                    }
+
+                    skip(parser);
+                }
             }
-
-            read_byte(parser);
-            skip(parser);
-
-            if(parser->head=='-')
-                add_operation(expression, stack, '_', priorities);
-            else
-                add_operation(expression, stack, parser->head, priorities);
+            while(is_unary_operation);
         }
-
-        skip(parser);
 
         if(parser->head!='(' && !is_close_gap)
         {
-            if(!get_operand(parser, expression))
+            if(!get_operand_function(parser, expression))
                 return 0;
-
-            if(parser->expr_token->length)
-                break;
 
             is_operation=0;
         }
@@ -226,9 +258,9 @@ Array* parser_get_expression(Parser *parser)
         default:
             is_expression=0;
 
-            for(i=0; i<length_expression_operations; i++)
+            for(i=0; i<length_binary_operations; i++)
             {
-                if(is_true_word(parser, expression_operations[i].operation))
+                if(is_true_word(parser, binary_operations[i].operation))
                 {
                     if(is_operation)
                     {
@@ -236,7 +268,7 @@ Array* parser_get_expression(Parser *parser)
                         return 0;
                     }
 
-                    add_operation(expression, stack, expression_operations[i].number_operation, priorities);
+                    add_operation(expression, stack, binary_operations[i].number_operation, priorities);
 
                     is_operation=1;
                     is_close_gap=0;
@@ -270,105 +302,46 @@ Array* parser_get_expression(Parser *parser)
         return 0;
     }
 
-    convert_from_postfix_to_infix_notation(expression);
+    return expression;
+}
+
+
+Array* parser_get_expression(Parser *parser)
+{
+    /*
+    return get_expression_in_postfix_notation(parser,
+                                              get_expression_operand,
+                                              expression_unary_operations, length_expression_unary_operation,
+                                              expression_operations, length_expression_operations);*/
+    Array *expression=get_expression_in_postfix_notation(parser,
+                                                         get_expression_operand,
+                                                         expression_unary_operations, length_expression_unary_operation,
+                                                         expression_operations, length_expression_operations);
+    if(expression)
+        convert_from_postfix_to_infix_notation(expression);
 
     return expression;
 }
 
 
-Array* parser_get_condition(Parser *parser)
+static char get_condition_operand(Parser *parser, Array *condition)
 {
-    Variable *operand;
-    Array    *stack                  = array_init(2);
-    Array    *condition              = array_init(4),
-             *arithmetic_expression;
+    Array *arithmetic_expression=parser_get_expression(parser);
 
-    char      is_condition           = 1,
-              is_operation           = 0,
-              is_close_gap           = 0,
-              op;
-
-    int       i;
-
-    while(!parser->end_of_data && is_condition)
-    {
-        skip(parser);
-
-        while(is_true_word(parser, "not"))
-        {
-            add_operation(condition, stack, 'n', priorities);
-            skip(parser);
-        }
-
-        if(parser->head!='(' && !is_close_gap)
-        {
-            arithmetic_expression=parser_get_expression(parser);
-
-            if(!arithmetic_expression)
-                return 0;
-
-            array_push(condition, new_data(arithmetic_expression, OPERAND));
-
-            is_operation=0;
-        }
-
-        switch(parser->head)
-        {
-        case '(':
-            array_push(stack, '(');
-            is_operation=1;
-            is_close_gap=0;
-            break;
-
-        case ')':
-            get_close_brace(stack, condition);
-            is_operation=0;
-            is_close_gap=1;
-            break;
-
-        default:
-            is_condition=0;
-
-            for(i=0; i<length_condition_operations; i++)
-            {
-                if(is_true_word(parser, condition_operations[i].operation))
-                {
-                    if(is_operation)
-                    {
-                        printf("2 операции без операнда\n");
-                        return 0;
-                    }
-
-                    add_operation(condition, stack, condition_operations[i].number_operation, priorities);
-
-                    is_operation=1;
-                    is_close_gap=0;
-                    is_condition=1;
-
-                    break;
-                }
-            }
-        }
-
-        if(is_condition)
-            read_byte(parser);
-    }
-
-    while(!array_empty(stack))
-    {
-        op=array_pop(stack);
-
-        if(op=='(')
-        {
-            printf("expected )\n");
-            return 0;
-        }
-
-        array_push(condition, new_data(op, OPERATION));
-    }
-
-    if(!condition->length)
+    if(!arithmetic_expression)
         return 0;
 
-    return condition;
+    array_push(condition, new_data(arithmetic_expression, OPERAND));
+
+    return 1;
+}
+
+
+Array* parser_get_condition(Parser *parser)
+{
+    return get_expression_in_postfix_notation(parser,
+                                              get_condition_operand,
+                                              condition_unary_operations, length_condition_unary_operation,
+                                              condition_operations, length_condition_operations);
+
 }

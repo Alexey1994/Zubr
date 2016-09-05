@@ -12,7 +12,11 @@ char parser_end(Parser *parser)
     }
 
     if(debug)
+    {
         block_pos--;
+        print_block();
+        printf("END\n\n");
+    }
 
     switch(parser->cur_block->type)
     {

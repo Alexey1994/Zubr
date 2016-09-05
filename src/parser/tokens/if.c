@@ -1,4 +1,3 @@
-//1.Ok
 #include "if.h"
 #include "../expression.h"
 #include "../debug.h"
@@ -12,8 +11,7 @@ char parser_if(Parser *parser)
     if(debug)
     {
         print_block();
-        printf("\nIF ");
-        block_pos++;
+        printf("IF ");
     }
 
     condition=parser_get_condition(parser);
@@ -21,7 +19,7 @@ char parser_if(Parser *parser)
     if(!condition)
         return 0;
 
-    if_data=new(If);
+    if_data            = new(If);
     if_data->condition = condition;
     if_data->body      = array_init(8);
     if_data->else_body = array_init(8);
@@ -29,7 +27,10 @@ char parser_if(Parser *parser)
     add_block(parser, if_data, IF, if_data->body);
 
     if(debug)
+    {
         printf("\n");
+        block_pos++;
+    }
 
     return 1;
 }

@@ -1,4 +1,5 @@
 #include "while.h"
+#include "../debug.h"
 
 
 char parser_while(Parser *parser)
@@ -14,6 +15,13 @@ char parser_while(Parser *parser)
 
     if(parser->cur_block->type==DO)
     {
+        if(debug)
+        {
+            block_pos--;
+            print_block();
+            printf("WHILE ");
+        }
+
         do_data=parser->cur_block->data;
         do_data->condition=condition;
 
@@ -22,12 +30,22 @@ char parser_while(Parser *parser)
     }
     else
     {
+        if(debug)
+        {
+            print_block();
+            printf("WHILE ");
+            block_pos++;
+        }
+
         while_data=new(While);
         while_data->condition=condition;
         while_data->body=array_init(8);
 
         add_block(parser, while_data, WHILE, while_data->body);
     }
+
+    if(debug)
+        printf("\n");
 
     return 1;
 }

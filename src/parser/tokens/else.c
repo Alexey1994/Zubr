@@ -9,7 +9,12 @@ char parser_else(Parser *parser)
        *cur_if;
 
     if(debug)
+    {
+        block_pos--;
+        print_block();
         printf("ELSE ");
+        block_pos++;
+    }
 
     if(parser->cur_block->type!=IF)
     {
@@ -24,7 +29,12 @@ char parser_else(Parser *parser)
 
     if(is_true_word(parser, "if"))
     {
-        else_if_data=new(If);
+        if(debug)
+        {
+            printf("IF ");
+        }
+
+        else_if_data            = new(If);
         else_if_data->body      = array_init(8);
         else_if_data->else_body = array_init(8);
         else_if_data->condition = parser_get_expression(parser);
@@ -37,7 +47,8 @@ char parser_else(Parser *parser)
     else
         parser->cur_block=new_data(if_data->body, ELSE);
 
-    printf("\n");
+    if(debug)
+        printf("\n");
 
     return 1;
 }

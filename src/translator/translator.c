@@ -218,9 +218,12 @@ void convert_from_postfix_to_infix_notation(Array *expression)
             case OPERAND:
             case COMPOUND_OPERAND:
                 array_push(stack, data);
+                //printf(" op");
                 break;
 
             case OPERATION:
+                //printf(" o");
+                //printf("{%d}", stack->length);
                 binary_operator=new(BinaryOperator);
                 binary_operator->operand2    = array_pop(stack);
                 binary_operator->operand1    = array_pop(stack);
@@ -239,4 +242,97 @@ void convert_from_postfix_to_infix_notation(Array *expression)
     }
 
     print_operand(array_pop(stack));
+}
+
+
+#include "translator.h"
+#include "get data.h"
+
+
+static PrefixTree* translator_states;
+
+
+void init_translator_parser_states()
+{
+    PrefixTree *state;
+
+    translator_states=create_prefix_tree();
+
+    state=create_prefix_tree();
+    add_data_in_prefix_tree(state, "condition", 0);
+
+    add_data_in_prefix_tree(translator_states, "if", state);
+
+
+    state=create_prefix_tree();
+    add_data_in_prefix_tree(state, "condition", 0);
+
+    add_data_in_prefix_tree(translator_states, "while", state);
+}
+
+
+void parse_translator_body(TranslatorParser *parser, PrefixTree *state)
+{
+    while(parser->head!='}' && !parser->end_data)
+    {
+        skip_translator_parser(parser);
+    }
+}
+
+
+char parse_translator_state(TranslatorParser *parser, Translator *translator)
+{
+    char *state_name;
+
+    state_name=get_new_token_translator_parser(parser);
+
+    if(!state_name)
+    {
+        printf("отсутствует токен\n");
+        return 0;
+    }
+
+    printf("state: %s\n", state_name);
+
+    skip_translator_parser(parser);
+
+    if(parser->head!='{')
+    {
+        printf("отсутствует {\n");
+        return 0;
+    }
+
+    get_byte_translator_parser(parser);
+    parse_translator_body(parser, find_data_in_prefix_tree(translator_states, state_name));
+    get_byte_translator_parser(parser);
+
+    return 1;
+}
+
+
+TranslatorParser* parse_translator(char *source, char (*get_byte)(char *source), char (*end_of_data)(char *source))
+{
+    TranslatorParser *parser     = new(TranslatorParser);
+    Translator       *translator = new(Translator);
+
+    parser->end_of_data = end_of_data;
+    parser->get_byte    = get_byte;
+    parser->source      = source;
+    parser->end_data    = 0;
+
+    translator->states = create_prefix_tree();
+
+    get_byte_translator_parser(parser);
+
+    while(!parser->end_data)
+    {
+
+        if(!parse_translator_state(parser, translator))
+            return 0;
+        //printf("%c", parser->head);
+
+        get_byte_translator_parser(parser);
+    }
+
+    return translator;
 }

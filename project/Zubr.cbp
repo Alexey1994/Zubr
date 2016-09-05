@@ -56,6 +56,13 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/SystemLibrary.h" />
+		<Unit filename="../src/character.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/character.h">
+			<Option target="Debug" />
+		</Unit>
 		<Unit filename="../src/extends.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -171,6 +178,13 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/prefix tree.h" />
+		<Unit filename="../src/translator/get data.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="../src/translator/get data.h">
+			<Option target="Debug" />
+		</Unit>
 		<Unit filename="../src/translator/translator.c">
 			<Option compilerVar="CC" />
 		</Unit>

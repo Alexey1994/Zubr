@@ -1,0 +1,24 @@
+operator +:a, b->c
+	Vector result
+	result.x=a.x+b.x
+	result.y=a.y+b.y
+	c=result
+end
+
+
+operator -:a, b->c
+	Vector result
+	result.x=a.x-b.x
+	result.y=a.y-b.y
+	c=result
+end
+
+
+operator mod:a->alfa
+	alfa=Arithmetic.sqrt(a.x*a.x+a.y*a.y)
+end
+
+
+operator *:a, b->c
+	c=a.x*b.x+a.y*b.y
+end

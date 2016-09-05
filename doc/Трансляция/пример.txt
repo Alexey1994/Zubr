@@ -1,0 +1,75 @@
+begin_file
+{
+	out ''
+}
+
+
+operand .
+{
+	out '.'
+	name
+}
+
+
+operand (
+{
+	name
+	out '('
+	state expression
+	out ')'
+}
+
+
+operand [
+{
+	name
+	out '['
+	state expression
+	out ']'
+}
+
+
+string
+{
+	out '"', pop, '"'
+}
+
+
+integer
+{
+	out pop
+}
+
+
+real
+{
+	out pop
+}
+
+
+if
+{
+	state condition
+	out 'jz ', if_end
+
+	push if_end
+}
+
+
+end
+{
+	update pop, current_address
+	out current_address
+}
+
+
+operator +
+{
+	
+}
+
+
+end_file
+{
+	out ''
+}
