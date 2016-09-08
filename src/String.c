@@ -204,3 +204,11 @@ int str_comparision(String *s1, String *s2)
 {
     return strcmp(s1->begin, s2->begin);
 }
+
+
+char* to_char_array(String *s)
+{
+    char *char_array=s->begin;
+    free(s);
+    return char_array;
+}

@@ -29,4 +29,6 @@ int str_to_int(String *s);
 float str_to_float(String *s);
 int str_hex_to_int(String *s);
 
+char* to_char_array(String *s);
+
 #endif // STRINSSS_H_INCLUDED

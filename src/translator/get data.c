@@ -21,7 +21,6 @@ void skip_translator_parser(TranslatorParser *parser)
 char* get_new_token_translator_parser(TranslatorParser *parser)
 {
     String *token=str_init("");
-    char   *returned_token;
 
     skip_translator_parser(parser);
 
@@ -37,10 +36,7 @@ char* get_new_token_translator_parser(TranslatorParser *parser)
         return 0;
     }
 
-    returned_token=token->begin;
-    free(token);
-
-    return returned_token;
+    return to_char_array(token);
 }
 
 
@@ -66,8 +62,8 @@ char* get_token_translator_parser(TranslatorParser *parser)
 }
 
 
-void out_token_translator_parser(TranslatorParser *parser, char *token)
+void out_token_translator_parser(char *token, Translator *translator)
 {
     for(; *token; token++)
-        parser->out_byte(*token, parser->out_source);
+        translator->out_byte(*token, translator->out_source);
 }

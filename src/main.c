@@ -13,13 +13,14 @@ int main()
 {
     setlocale(LC_ALL, "rus");
 
-    FILE     *f=fopen("test.txt", "rb");
-    Function *main;
+    FILE       *f=fopen("test.txt", "rb");
+    Function   *main;
+    PrefixTree *translator;
 
     init_parser();
     init_interpretator();
 
-    //main=run_parser(f, fgetc, feof);
+    main=run_parser(f, fgetc, feof);
 /*
     if(main)
         interpretator(main);
@@ -31,7 +32,11 @@ int main()
     FILE *out_file=fopen("out.txt", "wb");
 
     init_translator_parser_states();
-    parse_translator(file_translator, fgetc, feof, out_file, fputc);
+    init_translator_table();
+
+    translator=parse_translator(file_translator, fgetc, feof, out_file, fputc);
+
+    translate(main, translator, out_file, fputc);
 
     fclose(out_file);
 

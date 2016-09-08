@@ -1,6 +1,7 @@
 if
 {
-	out 'if '
+	out 'if('
+	out '){\r\n'
 }
 
 while
@@ -8,7 +9,19 @@ while
 	out 'while '
 }
 
-expression
+end
 {
+	out '}\r\n'
+}
 
+tab
+{
+	
+}
+
+print
+{
+	out 'console.log('
+	expression
+	out ')\r\n'
 }

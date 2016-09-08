@@ -619,18 +619,18 @@
 	"String.h"
 	<stdlib.h>
 
-1466932456 d:\Программирование\Мои исходники\zubr динамический\src\string.h
+1473100233 d:\Программирование\Мои исходники\zubr динамический\src\string.h
 
 1466110806 source:d:\Программирование\Мои исходники\zubr динамический\src\extends.c
 	"extends.h"
 	"String.h"
 	<stdio.h>
 
-1473016770 source:d:\Программирование\Мои исходники\zubr динамический\src\getdata.c
+1473016772 source:d:\Программирование\Мои исходники\zubr динамический\src\getdata.c
 	"GetData.h"
 	"character.h"
 
-1473016667 d:\Программирование\Мои исходники\zubr динамический\src\getdata.h
+1473016668 d:\Программирование\Мои исходники\zubr динамический\src\getdata.h
 	"parser/parser.h"
 
 1472174220 d:\Программирование\Мои исходники\zubr динамический\src\parser\parser.h
@@ -720,7 +720,7 @@
 	"memory.h"
 	"../extends.h"
 
-1473021631 source:d:\Программирование\Мои исходники\zubr динамический\src\main.c
+1473102763 source:d:\Программирование\Мои исходники\zubr динамический\src\main.c
 	<stdio.h>
 	<stdlib.h>
 	"parser/parser.h"
@@ -749,7 +749,7 @@
 1471559062 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\debug.c
 	"debug.h"
 
-1472978146 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\expression.c
+1472978148 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\expression.c
 	"expression.h"
 	"operand.h"
 	"../Map.h"
@@ -762,9 +762,11 @@
 1471563744 d:\Программирование\Мои исходники\zubr динамический\src\parser\operand.h
 	"parser.h"
 
-1473021610 d:\Программирование\Мои исходники\zubr динамический\src\translator\translator.h
+1473321978 d:\Программирование\Мои исходники\zubr динамический\src\translator\translator.h
+	"../parser/parser.h"
 	"../prefix tree.h"
 	"../Array.h"
+	"../String.h"
 
 1472171972 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\module.c
 	"module.h"
@@ -830,28 +832,28 @@
 1471600038 d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\include.h
 	"../parser.h"
 
-1472981989 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\break.c
+1472981990 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\break.c
 	"break.h"
 	"../debug.h"
 
-1472982030 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\continue.c
+1472982032 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\continue.c
 	"continue.h"
 	"../debug.h"
 
-1472982192 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\do.c
+1472982194 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\do.c
 	"do.h"
 	"../debug.h"
 
-1472982538 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\else.c
+1472982540 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\else.c
 	"else.h"
 	"../debug.h"
 
-1472982404 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\end.c
+1472982406 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\end.c
 	"end.h"
 	"../block.h"
 	"../debug.h"
 
-1472983103 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\if.c
+1472983104 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\if.c
 	"if.h"
 	"../expression.h"
 	"../debug.h"
@@ -859,7 +861,7 @@
 1471607600 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\include.c
 	"include.h"
 
-1472983230 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\loop.c
+1472983232 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\loop.c
 	"loop.h"
 	"../debug.h"
 
@@ -871,7 +873,7 @@
 1471607514 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\push.c
 	"push.h"
 
-1472983375 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\while.c
+1472983376 source:d:\Программирование\Мои исходники\zubr динамический\src\parser\tokens\while.c
 	"while.h"
 	"../debug.h"
 
@@ -894,7 +896,7 @@
 1472067746 source:d:\Программирование\Мои исходники\zubr динамический\src\prefix tree.c
 	"prefix tree.h"
 
-1470302546 source:d:\Программирование\Мои исходники\zubr динамический\src\string.c
+1473100220 source:d:\Программирование\Мои исходники\zubr динамический\src\string.c
 	"String.h"
 	<stdlib.h>
 
@@ -903,13 +905,12 @@
 	"extends.h"
 	<windows.h>
 
-1473023011 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\translator.c
+1473323575 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\translator.c
 	"translator.h"
-	"../extends.h"
-	"../types.h"
-	"../Map.h"
-	"translator.h"
-	"get data.h"
+	"types.h"
+	"translator commands/if.h"
+	"translator commands/print.h"
+	"translator commands/end.h"
 
 1469439982 source:d:\Программирование\Мои исходники\zubr динамический\src\tree.c
 	"tree.h"
@@ -917,18 +918,18 @@
 	<stdio.h>
 	<stdlib.h>
 
-1473018156 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\get data.c
+1473103895 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\get data.c
 	"get data.h"
 	"../character.h"
 
-1473018785 d:\Программирование\Мои исходники\zubr динамический\src\translator\get data.h
+1473103874 d:\Программирование\Мои исходники\zubr динамический\src\translator\get data.h
 	"translator.h"
 	"../string.h"
 
-1473016704 source:d:\Программирование\Мои исходники\zubr динамический\src\character.c
+1473016706 source:d:\Программирование\Мои исходники\zubr динамический\src\character.c
 	"character.h"
 
-1473016745 d:\Программирование\Мои исходники\zubr динамический\src\character.h
+1473016746 d:\Программирование\Мои исходники\zubr динамический\src\character.h
 
 1472171042 source:d:\zubr динамический\src\array.c
 	"array.h"
@@ -1270,4 +1271,94 @@
 	"state.h"
 
 1473087544 d:\zubr динамический\src\translator\commands\state.h
+
+1473100931 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\commands\out.c
+	"../translator.h"
+	"out.h"
+	"../types.h"
+
+1473089288 d:\Программирование\Мои исходники\zubr динамический\src\translator\commands\out.h
+
+1473087244 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\commands\push.c
+	"push.h"
+
+1473087248 d:\Программирование\Мои исходники\zubr динамический\src\translator\commands\push.h
+
+1473087590 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\commands\state.c
+	"state.h"
+
+1473087546 d:\Программирование\Мои исходники\zubr динамический\src\translator\commands\state.h
+
+1473286111 d:\Программирование\Мои исходники\zubr динамический\src\translator\types.h
+
+1473155363 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\convertor.c
+	"translator.h"
+	"../extends.h"
+	"../types.h"
+	"../Map.h"
+
+1473286328 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\translator parser.c
+	"translator parser.h"
+	"translator.h"
+	"get data.h"
+	"types.h"
+	"parser commands/push.h"
+	"parser commands/out.h"
+	"parser commands/state.h"
+	"parser commands/expression.h"
+
+1473155551 d:\Программирование\Мои исходники\zubr динамический\src\translator\translator parser.h
+
+1473196452 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\out.c
+	"../translator.h"
+	"out.h"
+	"../types.h"
+
+1473089288 d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\out.h
+
+1473087244 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\push.c
+	"push.h"
+
+1473087248 d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\push.h
+
+1473087590 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\state.c
+	"state.h"
+
+1473087546 d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\state.h
+
+1473195677 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\translator commands\if.c
+	"if.h"
+
+1473156074 d:\Программирование\Мои исходники\zubr динамический\src\translator\translator commands\if.h
+	"../translator.h"
+
+1473323977 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\out body.c
+	"out body.h"
+	"types.h"
+	"translator.h"
+	"../extends.h"
+	"../types.h"
+	"../Map.h"
+
+1473156314 d:\Программирование\Мои исходники\zubr динамический\src\translator\out body.h
+	"translator.h"
+
+1473322935 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\translator commands\print.c
+	"print.h"
+
+1473194538 d:\Программирование\Мои исходники\zubr динамический\src\translator\translator commands\print.h
+	"../translator.h"
+
+1473283545 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\translator commands\end.c
+	"end.h"
+
+1473283356 d:\Программирование\Мои исходники\zubr динамический\src\translator\translator commands\end.h
+	"../translator.h"
+
+1473286479 source:d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\expression.c
+	"expression.h"
+	"../types.h"
+
+1473286085 d:\Программирование\Мои исходники\zubr динамический\src\translator\parser commands\expression.h
+	"../translator.h"
 

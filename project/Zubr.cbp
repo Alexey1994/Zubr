@@ -58,11 +58,8 @@
 		<Unit filename="../src/SystemLibrary.h" />
 		<Unit filename="../src/character.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
 		</Unit>
-		<Unit filename="../src/character.h">
-			<Option target="Debug" />
-		</Unit>
+		<Unit filename="../src/character.h" />
 		<Unit filename="../src/extends.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -178,41 +175,58 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/prefix tree.h" />
-		<Unit filename="../src/translator/commands/out.c">
+		<Unit filename="../src/translator/convertor.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
 		</Unit>
-		<Unit filename="../src/translator/commands/out.h">
-			<Option target="Debug" />
-		</Unit>
-		<Unit filename="../src/translator/commands/pop.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../src/translator/commands/push.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-		</Unit>
-		<Unit filename="../src/translator/commands/push.h">
-			<Option target="Debug" />
-		</Unit>
-		<Unit filename="../src/translator/commands/state.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-		</Unit>
-		<Unit filename="../src/translator/commands/state.h">
-			<Option target="Debug" />
-		</Unit>
+		<Unit filename="../src/translator/convertor.h" />
 		<Unit filename="../src/translator/get data.c">
 			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/get data.h" />
+		<Unit filename="../src/translator/out body.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/out body.h" />
+		<Unit filename="../src/translator/parser commands/expression.c">
+			<Option compilerVar="CC" />
 			<Option target="Debug" />
 		</Unit>
-		<Unit filename="../src/translator/get data.h">
+		<Unit filename="../src/translator/parser commands/expression.h">
 			<Option target="Debug" />
 		</Unit>
+		<Unit filename="../src/translator/parser commands/out.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/parser commands/out.h" />
+		<Unit filename="../src/translator/parser commands/push.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/parser commands/push.h" />
+		<Unit filename="../src/translator/parser commands/state.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/parser commands/state.h" />
+		<Unit filename="../src/translator/translator commands/end.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/translator commands/end.h" />
+		<Unit filename="../src/translator/translator commands/if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/translator commands/if.h" />
+		<Unit filename="../src/translator/translator commands/print.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/translator commands/print.h" />
+		<Unit filename="../src/translator/translator parser.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/translator/translator parser.h" />
 		<Unit filename="../src/translator/translator.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/translator/translator.h" />
+		<Unit filename="../src/translator/types.h" />
 		<Unit filename="../src/tree.c">
 			<Option compilerVar="CC" />
 		</Unit>
